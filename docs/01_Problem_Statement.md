@@ -8,7 +8,7 @@ The coordination required to align these specialists is often larger than the ef
 Artificial intelligence has meaningfully improved one part of this picture: the speed at which code can be written. It has not meaningfully improved the coordination, planning, and decision-making layer that determines whether the right code gets written, in the right order, for the right reasons. This gap — between fast code generation and slow engineering coordination — is the problem this document addresses.
 
 
-Industry Background
+## Industry Background
 
 Building software has always involved translating an ambiguous idea into a precise, working system. Historically, this translation happened through a sequence of roles: a business need is interpreted by a product manager, structured into requirements, translated into an architecture, broken into interface and implementation work, verified by quality assurance, and finally released through a deployment process.
 
@@ -17,7 +17,7 @@ As systems have grown — from single applications to distributed services, from
 This complexity is compounded by the fact that software is rarely built once. Requirements change as markets shift, as users provide feedback, and as businesses discover what they actually need rather than what they initially assumed. Every change ripples across roles: a product decision affects architecture, an architecture decision affects implementation timelines, and an implementation constraint often forces a product decision to be revisited. Managing this ripple effect is what makes software engineering, as an organizational activity, difficult — independent of how quickly any individual line of code can be written.
 
 
-Current Development Challenges
+## Current Development Challenges
 
 Several recurring, well-documented challenges define the day-to-day reality of building software within a team:
 
@@ -35,7 +35,7 @@ Project delays. Each of the above compounds over the lifetime of a project, and 
 None of these challenges are new. What has changed is the pace at which teams are expected to operate, which has made the cost of unresolved coordination overhead considerably more visible and more expensive.
 
 
-Who Is Affected?
+## Who Is Affected?
 
 Students attempting to build substantial projects for coursework, research, or competitions often possess the technical knowledge required for individual components but lack exposure to how those components should be coordinated into a coherent system, and typically have no access to the range of specialized roles a real engineering effort would involve.
 
@@ -50,7 +50,7 @@ Enterprises, despite having access to full teams, are not immune to this problem
 Across all of these groups, the common thread is the same: the difficulty of building software is increasingly a difficulty of coordinating the process of building it, not merely a difficulty of writing individual pieces of code.
 
 
-Root Cause Analysis
+## Root Cause Analysis
 
 The persistence of this problem, despite substantial advances in artificial intelligence, can be traced to a specific gap: existing AI-assisted development tools operate primarily as task-level accelerators rather than as participants in the engineering process.
 
@@ -59,7 +59,7 @@ A tool that generates a function, a component, or a snippet of code assists with
 In other words, the industry has made substantial progress on the speed of implementation while the orchestration of engineering decisions has remained a largely manual, human-coordinated process. Because implementation was previously the primary bottleneck, accelerating it produced real short-term benefit. But as implementation speed increases, the coordination layer — which has not been meaningfully addressed — increasingly becomes the dominant constraint on how quickly an idea can become a working product.
 
 
-Limitations of Existing Approaches
+## Limitations of Existing Approaches
 
 Two broad categories of existing practice attempt to address parts of this problem, and both leave a meaningful gap.
 
@@ -70,7 +70,7 @@ Contemporary AI coding assistance, at a high level, addresses a narrower slice o
 The gap left unaddressed by both approaches is the same: neither provides a mechanism by which the coordination and decision-making connecting each stage of software development is itself handled with the same rigor and speed that implementation has achieved.
 
 
-Why This Problem Matters Today
+## Why This Problem Matters Today
 
 Several converging trends make this problem more urgent now than at any prior point:
 
@@ -85,7 +85,7 @@ Rising expectations for rapid innovation. Academic, entrepreneurial, and enterpr
 Taken together, these trends indicate that the constraint limiting how quickly software gets built is shifting — from the speed of writing code to the speed and quality of coordinating the decisions that surround it. Addressing implementation speed alone, without addressing this coordination layer, leaves the core problem largely unsolved.
 
 
-Key Takeaways
+## Key Takeaways
 
 
 Building software requires coordination across many specialized roles, and this coordination — not implementation alone — is a primary source of delay, cost, and inconsistency.
@@ -103,3 +103,7 @@ Modern software engineering is no longer constrained primarily by the speed of w
 As Artificial Intelligence continues to accelerate implementation, the coordination layer has emerged as the next major bottleneck preventing ideas from becoming reliable software efficiently. Addressing this challenge requires rethinking how software engineering itself is organized—not merely how code is generated.
 
 Understanding this coordination problem provides the foundation for exploring a new approach to software engineering, which is presented in the following document.
+
+
+
+**AI Implementation Guidance:** This project is focused exclusively on solving the engineering coordination problem in software development by building an AI-powered engineering organization rather than another AI coding assistant. The objective is to transform a raw product idea into a production-ready software system by orchestrating specialized AI agents that collaboratively perform the responsibilities of a Product Manager, Business Analyst, Software Architect, UI/UX Designer, Frontend Engineer, Backend Engineer, Database Engineer, QA Engineer, Security Engineer, DevOps Engineer, and Documentation Engineer under the supervision of a central Coordinator Agent. Every agent should have clearly defined responsibilities, communicate through structured workflows, validate upstream decisions before producing downstream outputs, identify ambiguities, explain trade-offs, maintain consistency across requirements, architecture, implementation, testing, deployment, and documentation, and support human approval for critical decisions. The system should automatically generate and synchronize PRDs, architecture documents, database schemas, API contracts, UI designs, development tasks, source code, testing strategies, deployment plans, and documentation while tracking dependencies and adapting to changing requirements without losing context. The architecture should be modular, scalable, production-ready, explainable, extensible, and maintainable, with support for multiple AI providers, future enterprise integrations, and human-in-the-loop workflows. This repository should contain only components that directly contribute to reducing engineering coordination overhead; features unrelated to this objective should be avoided. Whenever multiple implementation approaches are possible, always prefer the one that most effectively improves engineering orchestration, decision consistency, traceability, collaboration, and end-to-end software lifecycle automation rather than merely increasing code generation speed.
