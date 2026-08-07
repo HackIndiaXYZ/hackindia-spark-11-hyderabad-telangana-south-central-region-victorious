@@ -145,6 +145,22 @@ vite.config.ts.timestamp-*
 # Claude Code local settings (per-machine, not shared)
 .claude/settings.local.json
 
+# --- Mutagent / Helix installation --------------------------------------------
+# Developer-local tooling, installed with the Mutagent CLI. Deliberately not
+# committed: it is third-party (two skills are licensed Proprietary, and this
+# repository is MIT), it vendors ~23MB of node_modules, and nothing Victorious
+# runs depends on it — Helix is a development-time ADL conductor, never part of
+# the runtime execution path (`docs/07_System_Architecture.md`, ADR-0013).
+#
+# To restore it:  npx mutagent install helix
+.claude/agents/
+.claude/skills/
+.agents/
+.codex/
+
+# Points at a specific Mutagent workspace and organization — per-developer.
+.mutagentrc.json
+
 # --- Python (apps/api) --------------------------------------------------------
 .venv/
 venv/

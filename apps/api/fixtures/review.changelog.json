@@ -1,0 +1,15 @@
+{
+  "value": {
+    "summary": "Factual and appropriately brief for an initial entry.",
+    "score_adjustment": 0,
+    "strengths": [
+      "States what was built without overstating completeness."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

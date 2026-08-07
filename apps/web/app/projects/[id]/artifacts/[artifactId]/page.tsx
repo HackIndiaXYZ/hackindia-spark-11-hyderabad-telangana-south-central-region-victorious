@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, ChevronLeft } from "lucide-react";
 
 import { ArtifactBody } from "@/components/artifact-body";
+import {
+  ArtifactReviewPanel,
+  ReviewUnavailable,
+} from "@/components/review/review-card";
 import { ReviseArtifact } from "@/components/revise-artifact";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -111,6 +115,25 @@ export default async function ArtifactPage({
         </div>
 
         <aside className="space-y-4">
+          <Card>
+            <CardHeader className="flex-row items-center justify-between gap-2">
+              <CardTitle>Engineering review</CardTitle>
+              <Link
+                href={`/projects/${id}/review`}
+                className="text-xs text-content-subtle transition-colors hover:text-accent"
+              >
+                All reviews →
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {artifact.review ? (
+                <ArtifactReviewPanel review={artifact.review} />
+              ) : (
+                <ReviewUnavailable />
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Version history</CardTitle>

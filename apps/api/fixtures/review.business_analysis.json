@@ -1,0 +1,16 @@
+{
+  "value": {
+    "summary": "Genuine scrutiny \u2014 questions NFR-01 rather than validating everything.",
+    "score_adjustment": 4,
+    "strengths": [
+      "Questions NFR-01 instead of rubber-stamping it; an analyst that validates everything provides no signal.",
+      "The regulatory risk follows from the domain rather than being generic project risk."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

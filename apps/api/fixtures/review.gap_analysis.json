@@ -1,0 +1,15 @@
+{
+  "value": {
+    "summary": "The access-control gap is correctly identified and correctly rated high.",
+    "score_adjustment": 0,
+    "strengths": [
+      "The recommendation is an action \u2014 define roles \u2014 not a restatement of the gap."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "value": {
+    "summary": "Reviewable: names the rejected alternative and the cost accepted.",
+    "score_adjustment": 6,
+    "strengths": [
+      "PostgreSQL over MongoDB is argued from transactional integrity across appointment tables.",
+      "The trade-off is stated \u2014 clinical notes need a JSONB column \u2014 so a human can approve it on its merits."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Domain-specific risk with a real mitigation, though thin at one entry.",
+    "score_adjustment": -2,
+    "strengths": [
+      "The certification risk is specific to clinical data, not boilerplate schedule risk."
+    ],
+    "weaknesses": [
+      "A single risk under-represents a system handling patient data and payments."
+    ],
+    "suggestions": [
+      "Add data-retention and third-party-integration risks."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

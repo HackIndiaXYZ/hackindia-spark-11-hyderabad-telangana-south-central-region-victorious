@@ -1,0 +1,16 @@
+{
+  "value": {
+    "summary": "Honest about scope \u2014 names what it does not implement.",
+    "score_adjustment": 4,
+    "strengths": [
+      "`not_implemented` names authentication and migrations rather than leaving a reviewer to discover them.",
+      "The layout mirrors the approved components."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

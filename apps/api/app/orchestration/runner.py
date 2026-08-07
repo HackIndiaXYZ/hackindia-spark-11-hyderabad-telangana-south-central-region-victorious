@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from app.core.config import ReviewSettings
 from app.core.logging import get_logger
 from app.domain.errors import NotFoundError
 from app.domain.lifecycle import LifecycleStage
@@ -66,9 +67,10 @@ class OrchestrationRunner:
         provider: LLMProvider,
         events: EventBus,
         dispatcher: AgentDispatcher,
+        review: ReviewSettings | None = None,
     ) -> None:
         self._memory = memory
-        self._executive = ExecutiveAI(memory, provider, events)
+        self._executive = ExecutiveAI(memory, provider, events, review)
         self._dispatcher = dispatcher
         # Compiled once: the graph's shape is fixed, and rebuilding it per
         # request would pay compilation cost on every advance.

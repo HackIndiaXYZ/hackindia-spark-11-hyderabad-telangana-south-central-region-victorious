@@ -28,6 +28,7 @@ from app.events.bus import EventBus
 from app.llm.provider import LLMProvider
 from app.memory.context_builder import ContextBuilder
 from app.memory.repository import SharedMemory
+from app.review.reviewer import EngineeringReviewer
 
 logger = get_logger(__name__)
 
@@ -49,6 +50,7 @@ def build_organization(
     provider: LLMProvider,
     context_builder: ContextBuilder,
     events: EventBus,
+    reviewer: EngineeringReviewer | None = None,
 ) -> list[BaseAgent]:  # type: ignore[type-arg]
     """Instantiate every agent with its collaborators.
 
@@ -59,7 +61,7 @@ def build_organization(
     one another is by writing artifacts a later agent reads from shared memory.
     """
     agents = [
-        agent_class(memory, provider, context_builder, events)
+        agent_class(memory, provider, context_builder, events, reviewer)
         for agent_class in AGENT_CLASSES
     ]
 

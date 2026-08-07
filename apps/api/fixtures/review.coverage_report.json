@@ -1,0 +1,16 @@
+{
+  "value": {
+    "summary": "Reports the gap rather than hiding it behind a percentage.",
+    "score_adjustment": 5,
+    "strengths": [
+      "FR-01 is reported uncovered with the reason \u2014 no acceptance criteria \u2014 which is actionable.",
+      "Coverage is measured per requirement, so a gap is visible as a gap."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

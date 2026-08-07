@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "US-01 is testable end to end; coverage of the billing workflow is absent.",
+    "score_adjustment": 0,
+    "strengths": [
+      "US-01's acceptance criteria state both the success and the conflict path, so QA can write against them directly."
+    ],
+    "weaknesses": [
+      "Billing appears in the project brief but no story covers it, so it will not reach the architecture."
+    ],
+    "suggestions": [
+      "Add a billing story or record billing as explicitly deferred."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

@@ -23,6 +23,7 @@ from app.domain.artifacts import Artifact, ArtifactStatus, ArtifactType, Artifac
 from app.domain.events import EventType, ProjectEvent
 from app.domain.lifecycle import ROLE_TITLES, AgentRole, LifecycleStage, StageStatus
 from app.domain.projects import Project
+from app.domain.reviews import ArtifactReview, ReviewVerdict
 
 # --- Projects -----------------------------------------------------------------
 
@@ -162,6 +163,11 @@ class ArtifactDetail(ArtifactSummary):
     produced_by_run_id: str | None = None
     is_latest: bool = True
     versions: list[VersionSummary] = Field(default_factory=list)
+    # Forward reference: ReviewView is declared with the other review models
+    # further down, and the module rebuilds this class once it exists.
+    review: ReviewView | None = Field(
+        default=None, description="The engineering review of this version, if any."
+    )
 
     @classmethod
     def from_resolved(
@@ -170,6 +176,7 @@ class ArtifactDetail(ArtifactSummary):
         *,
         is_stale: bool = False,
         versions: list[VersionSummary] | None = None,
+        review: ReviewView | None = None,
     ) -> ArtifactDetail:
         """Build from an artifact resolved together with one of its versions.
 
@@ -188,6 +195,7 @@ class ArtifactDetail(ArtifactSummary):
             produced_by_run_id=resolved.version.produced_by_run_id,
             is_latest=resolved.is_latest,
             versions=versions or [],
+            review=review,
         )
 
 
@@ -450,3 +458,114 @@ class TraceGraph(BaseModel):
     nodes: list[TraceNode] = Field(default_factory=list)
     edges: list[TraceEdgeView] = Field(default_factory=list)
     stale_artifact_ids: list[str] = Field(default_factory=list)
+
+
+# --- Engineering review -------------------------------------------------------
+
+
+class ReviewFindingView(BaseModel):
+    """One review observation, with whether it was measured or judged."""
+
+    text: str
+    source: str = Field(description="'check' for a deterministic rule, 'reasoning' otherwise.")
+
+
+class ReviewView(BaseModel):
+    """A scored review of one artifact version."""
+
+    id: str
+    artifact_id: str
+    artifact_title: str = ""
+    artifact_type: ArtifactType | None = None
+    artifact_version: int
+    stage: LifecycleStage
+    role: AgentRole
+    role_title: str
+
+    quality_score: int
+    deterministic_score: int
+    band: str
+    verdict: ReviewVerdict
+
+    summary: str
+    strengths: list[ReviewFindingView] = Field(default_factory=list)
+    weaknesses: list[ReviewFindingView] = Field(default_factory=list)
+    suggestions: list[ReviewFindingView] = Field(default_factory=list)
+
+    reasoning_applied: bool
+    reviewer_provider: str | None = None
+    reviewer_model: str | None = None
+    created_at: datetime
+
+    @classmethod
+    def build(
+        cls, review: ArtifactReview, *, title: str = "", artifact_type: ArtifactType | None = None
+    ) -> ReviewView:
+        return cls(
+            id=review.id,
+            artifact_id=review.artifact_id,
+            artifact_title=title,
+            artifact_type=artifact_type,
+            artifact_version=review.artifact_version,
+            stage=review.stage,
+            role=review.role,
+            role_title=ROLE_TITLES[review.role],
+            quality_score=review.quality_score,
+            deterministic_score=review.deterministic_score,
+            band=review.band,
+            verdict=review.verdict,
+            summary=review.summary,
+            strengths=[ReviewFindingView(**item.model_dump()) for item in review.strengths],
+            weaknesses=[ReviewFindingView(**item.model_dump()) for item in review.weaknesses],
+            suggestions=[ReviewFindingView(**item.model_dump()) for item in review.suggestions],
+            reasoning_applied=review.reasoning_applied,
+            reviewer_provider=review.reviewer_provider,
+            reviewer_model=review.reviewer_model,
+            created_at=review.created_at,
+        )
+
+
+class RoleScore(BaseModel):
+    """A specialist's average score across everything it produced."""
+
+    role: AgentRole
+    role_title: str
+    average_score: int
+    artifacts_reviewed: int
+    lowest_score: int
+    needs_revision: int = Field(
+        default=0, description="How many of its artifacts a reviewer would send back."
+    )
+
+
+class ProjectReviewSummary(BaseModel):
+    """Everything the Helix Review view renders.
+
+    `10_UI_UX_Plan.md` asks the workspace to communicate engineering health at a
+    glance; this is that, scoped to quality rather than progress.
+    """
+
+    project_id: str
+    overall_score: int = Field(
+        default=0, description="Mean across every reviewed artifact. 0 when none exist."
+    )
+    artifacts_reviewed: int = 0
+    reasoning_coverage: int = Field(
+        default=0,
+        description=(
+            "Percentage of reviews a model contributed to. Below 100 means some "
+            "reviews are purely structural, which the view states plainly."
+        ),
+    )
+    needs_revision: int = 0
+    by_role: list[RoleScore] = Field(default_factory=list)
+    recommendations: list[ReviewFindingView] = Field(
+        default_factory=list,
+        description="Suggestions from the lowest-scoring artifacts, worth acting on first.",
+    )
+    reviews: list[ReviewView] = Field(default_factory=list)
+
+
+# `ArtifactDetail.review` is annotated before `ReviewView` exists, so the model
+# is rebuilt here — once the forward reference can actually be resolved.
+ArtifactDetail.model_rebuild()

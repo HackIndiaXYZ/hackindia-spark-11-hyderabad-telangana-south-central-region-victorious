@@ -49,6 +49,7 @@ class EventType(StrEnum):
     ARTIFACT_REVISED = "artifact_revised"
     ARTIFACT_APPROVED = "artifact_approved"
     ARTIFACT_MARKED_STALE = "artifact_marked_stale"
+    ARTIFACT_REVIEWED = "artifact_reviewed"
 
     APPROVAL_REQUESTED = "approval_requested"
     APPROVAL_GRANTED = "approval_granted"

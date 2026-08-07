@@ -28,6 +28,7 @@ from app.domain.artifacts import (
 from app.domain.events import ProjectEvent
 from app.domain.lifecycle import AgentRole, LifecycleStage
 from app.domain.projects import Project
+from app.domain.reviews import ArtifactReview
 from app.domain.traceability import ImpactAnalysis, StaleEdge, TraceEdge
 
 
@@ -222,10 +223,32 @@ class EventRepository(Protocol):
         ...
 
 
+@runtime_checkable
+class ReviewRepository(Protocol):
+    """Engineering reviews, keyed to an artifact version."""
+
+    async def upsert(self, review: ArtifactReview) -> ArtifactReview:
+        """Store a review, replacing any earlier review of the same version.
+
+        Upsert rather than append: a review is a judgement *of a version*, and a
+        version is immutable, so a second review of it supersedes the first
+        rather than accumulating alongside it.
+        """
+        ...
+
+    async def list_for_project(self, project_id: str) -> list[ArtifactReview]: ...
+
+    async def for_artifact(
+        self, artifact_id: str, version: int | None = None
+    ) -> ArtifactReview | None:
+        """Return the review of a version, or of the latest reviewed version."""
+        ...
+
+
 class SharedMemory(Protocol):
     """The single source of truth, as one injectable collaborator.
 
-    Agents and the orchestrator depend on this rather than on six separate
+    Agents and the orchestrator depend on this rather than on seven separate
     repositories, which keeps their signatures honest: an agent that can read the
     project can read all of it.
     """
@@ -247,3 +270,6 @@ class SharedMemory(Protocol):
 
     @property
     def events(self) -> EventRepository: ...
+
+    @property
+    def reviews(self) -> ReviewRepository: ...

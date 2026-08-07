@@ -28,6 +28,7 @@ class IdPrefix(StrEnum):
     TRACE_EDGE = "edg"
     APPROVAL = "apr"
     EVENT = "evt"
+    REVIEW = "rev"
     TASK = "tsk"
 
 

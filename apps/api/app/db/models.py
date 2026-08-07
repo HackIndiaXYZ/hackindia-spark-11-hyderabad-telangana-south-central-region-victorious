@@ -126,6 +126,45 @@ class ArtifactVersionRow(Base):
     )
 
 
+class ArtifactReviewRow(Base):
+    __tablename__ = "artifact_reviews"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    project_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    artifact_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("artifacts.id", ondelete="CASCADE"), nullable=False
+    )
+    artifact_version: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    stage: Mapped[str] = mapped_column(String(50), nullable=False)
+    role: Mapped[str] = mapped_column(String(50), nullable=False)
+    produced_by_run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    quality_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    verdict: Mapped[str] = mapped_column(String(40), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, default="")
+
+    strengths: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    weaknesses: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    suggestions: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+
+    deterministic_score: Mapped[int] = mapped_column(Integer, default=0)
+    reasoning_applied: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    reviewer_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    reviewer_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    __table_args__ = (
+        # One review per artifact version: a re-review supersedes rather than
+        # accumulates, and the version is what a score is attached to.
+        UniqueConstraint("artifact_id", "artifact_version", name="uq_review_artifact_version"),
+        Index("ix_reviews_project", "project_id"),
+    )
+
+
 class TraceEdgeRow(Base):
     __tablename__ = "trace_edges"
 

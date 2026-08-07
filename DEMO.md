@@ -207,6 +207,47 @@ genuinely blocks a release.
 
 ---
 
+## Step 12 — Helix Review
+
+**Helix Review** tab.
+
+**Overall 90/100** across all 22 artifacts, scored per specialist — Business
+Analyst 86, Software Architect 92 — with recommendations that name something
+real: *"add a uniqueness constraint on (doctor, slot) to enforce FR-02"*.
+
+Scroll one review open. Each finding is tagged `check` or `reasoning`.
+
+> "Most of this number is measured, not opined. Five deterministic checks over
+> the artifact and its trace edges carry the full hundred points — does it
+> declare upstream, does it carry structured fields, is it substantive, what
+> confidence did the agent report, does it have the fields its type requires. A
+> reasoning pass then reads the artifact *and those findings*, and can move the
+> score by at most twelve points, in writing."
+
+> "That cap is the point. A model can sharpen a judgement; it cannot overturn a
+> fact, and it cannot manufacture a good score for an artifact that declares no
+> upstream. It is also why these scores actually differ — 81 to 100 across
+> eleven distinct values. A purely generative reviewer replaying fixtures would
+> score everything the same, and the number would be theatre."
+
+Click any artifact → its review sits beside the version history, judging *that
+version*. Revise it by hand and the review goes empty rather than inheriting the
+old score.
+
+> "And the Executive consults these before letting a specialist build on upstream
+> work — scoped to what that stage actually reads, so a weak deployment plan
+> can't block architecture. Advisory by default; one environment variable makes
+> it a gate."
+
+**If asked where Helix is:** the reviewer runs natively, on the same provider
+abstraction the agents use. Helix has no importable code — no `.py` files, no
+server, its orchestrator is a markdown definition for a coding agent — and
+`07_System_Architecture.md` keeps Mutagent out of the runtime path regardless.
+Helix specs and evaluates this reviewer at development time.
+[ADR-0013](docs/adr/0013-engineering-review-layer.md).
+
+---
+
 ## Closing
 
 > "Not a chatbot. Not a coding assistant. Not a project management tool. An AI
@@ -234,7 +275,7 @@ went to change propagation instead, which is what no other tool does.
 ```bash
 cd apps/api && .venv/Scripts/python -m pytest tests/test_architecture.py -v
 ```
-Eight rules, parsed from the source tree. A layer importing outward, a framework
+Eleven rules, parsed from the source tree. A layer importing outward, a framework
 reaching the domain, or the DI container built outside the composition root fails
 the build.
 

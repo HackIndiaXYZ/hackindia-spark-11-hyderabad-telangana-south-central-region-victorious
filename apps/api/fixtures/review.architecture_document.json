@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Explains the reasoning rather than restating the component table.",
+    "score_adjustment": 4,
+    "strengths": [
+      "Explains why a modular monolith was chosen \u2014 the part a reader cannot recover from the code."
+    ],
+    "weaknesses": [
+      "Does not say what would have to change if the scale assumption proved wrong."
+    ],
+    "suggestions": [
+      "Record the signal that would justify splitting the monolith."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

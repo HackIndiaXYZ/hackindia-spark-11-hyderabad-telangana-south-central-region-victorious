@@ -21,6 +21,7 @@ fifteen specification documents are read-only input.
 | [0010](0010-agent-roster-and-stage-ownership.md) | Eight agents fill seven roles, and artifacts are rendered from structured output | Accepted | 4 |
 | [0011](0011-stream-carries-signals-not-state.md) | The live stream carries signals; the REST API carries state | Accepted | 6 |
 | [0012](0012-change-propagation-and-resynchronisation.md) | Stale work proposes re-synchronisation rather than blocking | Accepted | 7 |
+| [0013](0013-engineering-review-layer.md) | Engineering review runs natively; Helix drives its lifecycle | Accepted | 11 |
 
 ## Deviations from the specification
 

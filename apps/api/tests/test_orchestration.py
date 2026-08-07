@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from app.agents.base import BaseAgent
 from app.agents.contracts import AgentOutput
-from app.core.config import DatabaseSettings
+from app.core.config import DatabaseSettings, ReviewSettings
 from app.db.session import Database
 from app.domain.approvals import ApprovalKind, ApprovalStatus
 from app.domain.artifacts import ArtifactStatus, ArtifactType, ArtifactVersion
@@ -34,6 +34,7 @@ from app.memory.sql_repository import SqlSharedMemory
 from app.orchestration.conflicts import ConflictKind
 from app.orchestration.executive import CoordinationAction
 from app.orchestration.runner import OrchestrationRunner
+from app.review.reviewer import EngineeringReviewer
 
 ARTIFACT_ID_PATTERN = re.compile(r"art_[0-9a-f]{32}")
 
@@ -183,6 +184,7 @@ def build_runner(
     *,
     provider: object | None = None,
     roles: dict[AgentRole, LifecycleStage] | None = None,
+    review: ReviewSettings | None = None,
 ) -> OrchestrationRunner:
     from app.orchestration.dispatcher import RegistryDispatcher
 
@@ -199,12 +201,19 @@ def build_runner(
             AgentRole.SOFTWARE_ARCHITECT: LifecycleStage.ARCHITECTURE,
         }
 
+    # The reviewer is attached exactly as `app.core.bootstrap` attaches it, so
+    # these tests exercise the organization as it is actually composed.
+    settings = review or ReviewSettings()
+    reviewer = EngineeringReviewer(resolved_provider, settings)  # type: ignore[arg-type]
+
     dispatcher = RegistryDispatcher()
     for role, stage in roles.items():
         agent_class = make_agent(role, stage)
-        dispatcher.register(agent_class(memory, resolved_provider, context, events))  # type: ignore[arg-type]
+        dispatcher.register(
+            agent_class(memory, resolved_provider, context, events, reviewer)  # type: ignore[arg-type]
+        )
 
-    return OrchestrationRunner(memory, resolved_provider, events, dispatcher)  # type: ignore[arg-type]
+    return OrchestrationRunner(memory, resolved_provider, events, dispatcher, settings)  # type: ignore[arg-type]
 
 
 async def approve_latest(memory: SqlSharedMemory, project_id: str) -> None:
@@ -568,3 +577,115 @@ async def test_executive_produces_no_engineering_artifacts(
 
     runs = await memory.runs.list_for_project(project.id)
     assert all(run.role is not AgentRole.EXECUTIVE for run in runs)
+
+
+# --- The Executive consults the engineering review ----------------------------
+
+
+async def store_failing_review(
+    memory: SqlSharedMemory, project_id: str, artifact_type: ArtifactType
+) -> None:
+    """Record a below-threshold review against the current version of an artifact."""
+    from app.domain.reviews import ArtifactReview, ReviewVerdict
+
+    artifacts = await memory.artifacts.list_for_project(project_id)
+    artifact = next(item for item in artifacts if item.type is artifact_type)
+
+    await memory.reviews.upsert(
+        ArtifactReview(
+            project_id=project_id,
+            artifact_id=artifact.id,
+            artifact_version=artifact.current_version,
+            stage=artifact.stage,
+            role=artifact.owner_role,
+            quality_score=31,
+            deterministic_score=31,
+            verdict=ReviewVerdict.NEEDS_REVISION,
+            summary="Declares no upstream and carries no structured content.",
+        )
+    )
+
+
+async def test_a_failed_review_does_not_stop_the_organization_by_default(
+    memory: SqlSharedMemory, project: Project
+) -> None:
+    """Advisory by default: a score is a signal to weigh, not an authority to obey."""
+    await build_runner(memory).advance(project.id)
+    await approve_latest(memory, project.id)
+    await store_failing_review(memory, project.id, ArtifactType.PRD)
+
+    outcome = await build_runner(memory).advance(project.id)
+
+    assert not outcome.is_blocked
+    assert LifecycleStage.ARCHITECTURE in outcome.executed_stages
+
+
+async def test_a_failed_review_blocks_the_stage_that_would_consume_it(
+    memory: SqlSharedMemory, project: Project
+) -> None:
+    """Promoted to a gate, the Executive refuses to build on weak upstream work."""
+    await build_runner(memory).advance(project.id)
+    await approve_latest(memory, project.id)
+
+    # Architecture reads the PRD, and the PRD just failed review.
+    await store_failing_review(memory, project.id, ArtifactType.PRD)
+
+    outcome = await build_runner(
+        memory, review=ReviewSettings(blocking=True)
+    ).advance(project.id)
+
+    assert outcome.is_blocked
+    assert "engineering review" in outcome.halt_reason
+    assert "31/100" in outcome.halt_reason
+    assert LifecycleStage.ARCHITECTURE not in outcome.executed_stages
+
+
+async def test_a_weak_artifact_no_stage_reads_does_not_block_anything(
+    memory: SqlSharedMemory, project: Project
+) -> None:
+    """Scoped to a stage's inputs: a weak deployment plan must not stop architecture."""
+    await build_runner(memory).advance(project.id)
+    await approve_latest(memory, project.id)
+
+    # Architecture does not read acceptance criteria; testing does.
+    await store_failing_review(memory, project.id, ArtifactType.ACCEPTANCE_CRITERIA)
+
+    outcome = await build_runner(
+        memory, review=ReviewSettings(blocking=True)
+    ).advance(project.id)
+
+    assert not outcome.is_blocked
+    assert LifecycleStage.ARCHITECTURE in outcome.executed_stages
+
+
+async def test_agents_review_what_they_produce_without_being_asked(
+    memory: SqlSharedMemory, project: Project
+) -> None:
+    await build_runner(memory).advance(project.id)
+
+    artifacts = await memory.artifacts.list_for_project(project.id)
+    reviews = await memory.reviews.list_for_project(project.id)
+
+    assert len(reviews) == len([item for item in artifacts if item.has_content])
+    assert all(0 < review.quality_score <= 100 for review in reviews)
+
+
+async def test_a_review_failure_never_costs_the_organization_its_work(
+    memory: SqlSharedMemory, project: Project
+) -> None:
+    """Fail-open: reviewing is a quality signal, not a gate on production."""
+    from app.review.reviewer import EngineeringReviewer
+
+    class ExplodingReviewer(EngineeringReviewer):
+        async def review(self, *args: object, **kwargs: object) -> object:
+            raise RuntimeError("the reviewer fell over")
+
+    runner = build_runner(memory)
+    for agent in runner._dispatcher._agents.values():
+        agent._reviewer = ExplodingReviewer(None, ReviewSettings())
+
+    outcome = await runner.advance(project.id)
+
+    assert outcome.made_progress
+    assert await memory.artifacts.list_for_project(project.id)
+    assert await memory.reviews.list_for_project(project.id) == []

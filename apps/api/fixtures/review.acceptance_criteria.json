@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Criteria are binary and traceable; FR-01 has none.",
+    "score_adjustment": -3,
+    "strengths": [
+      "Each criterion maps to a requirement id, so coverage is measurable."
+    ],
+    "weaknesses": [
+      "FR-01 (patient registration) has no acceptance criteria at all, which is why QA later reports it untestable."
+    ],
+    "suggestions": [
+      "Write criteria for FR-01 covering duplicate records and required fields."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

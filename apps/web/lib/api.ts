@@ -88,6 +88,8 @@ export interface ArtifactDetail extends ArtifactSummary {
   produced_by_run_id: string | null;
   is_latest: boolean;
   versions: VersionSummary[];
+  /** The review of *this* version. Null for versions no agent produced. */
+  review: ReviewView | null;
 }
 
 export interface AgentCard {
@@ -163,6 +165,60 @@ export interface ImpactPreview {
   artifact_title: string;
   impacted: ImpactedArtifactView[];
   stages_affected: LifecycleStage[];
+}
+
+export type ReviewVerdict =
+  | "approved"
+  | "approved_with_suggestions"
+  | "needs_revision";
+
+export interface ReviewFindingView {
+  text: string;
+  /** "check" for a deterministic rule, "reasoning" for a model judgement. */
+  source: string;
+}
+
+export interface ReviewView {
+  id: string;
+  artifact_id: string;
+  artifact_title: string;
+  artifact_type: string | null;
+  artifact_version: number;
+  stage: LifecycleStage;
+  role: string;
+  role_title: string;
+  quality_score: number;
+  deterministic_score: number;
+  band: string;
+  verdict: ReviewVerdict;
+  summary: string;
+  strengths: ReviewFindingView[];
+  weaknesses: ReviewFindingView[];
+  suggestions: ReviewFindingView[];
+  reasoning_applied: boolean;
+  reviewer_provider: string | null;
+  reviewer_model: string | null;
+  created_at: string;
+}
+
+export interface RoleScore {
+  role: string;
+  role_title: string;
+  average_score: number;
+  artifacts_reviewed: number;
+  lowest_score: number;
+  needs_revision: number;
+}
+
+export interface ProjectReviewSummary {
+  project_id: string;
+  overall_score: number;
+  artifacts_reviewed: number;
+  reasoning_coverage: number;
+  needs_revision: number;
+  by_role: RoleScore[];
+  recommendations: ReviewFindingView[];
+  reviews: ReviewView[];
 }
 
 export interface TraceNode {
@@ -279,6 +335,9 @@ export const api = {
   listEvents: (id: string, limit = 200) =>
     apiRequest<EventView[]>(`${V1}/projects/${id}/events?limit=${limit}`, live),
 
+  getReviews: (id: string) =>
+    apiRequest<ProjectReviewSummary>(`${V1}/projects/${id}/reviews`, live),
+
   getTraceability: (id: string) =>
     apiRequest<TraceGraph>(`${V1}/projects/${id}/traceability`, live),
 };
@@ -300,6 +359,16 @@ export function typeLabel(type: string): string {
   if (overrides[type]) return overrides[type];
   const text = type.replace(/_/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** Map a review score onto the shared StatusBadge vocabulary. */
+export function scoreState(
+  score: number,
+): "complete" | "active" | "waiting" | "blocked" {
+  if (score >= 85) return "complete";
+  if (score >= 70) return "active";
+  if (score >= 60) return "waiting";
+  return "blocked";
 }
 
 /** Map an engineering state onto the shared StatusBadge vocabulary. */

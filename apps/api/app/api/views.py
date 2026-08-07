@@ -18,7 +18,11 @@ from app.api.schemas import (
     ImpactedArtifactView,
     ImpactPreview,
     ProjectDetail,
+    ProjectReviewSummary,
     ProjectSummary,
+    ReviewFindingView,
+    ReviewView,
+    RoleScore,
     StageSummary,
     TraceEdgeView,
     TraceGraph,
@@ -31,9 +35,11 @@ from app.domain.lifecycle import (
     ROLE_TITLES,
     STAGE_OWNERS,
     STAGE_SEQUENCE,
+    AgentRole,
     LifecycleStage,
     StageStatus,
 )
+from app.domain.reviews import ArtifactReview
 from app.domain.traceability import current_edges
 from app.memory.repository import SharedMemory
 
@@ -149,9 +155,22 @@ async def artifact_detail(
     history = await memory.artifacts.list_versions(artifact_id)
     stale = await stale_ids(memory, resolved.artifact.project_id)
 
+    # Reviews are written per version, so the review shown alongside a
+    # historical version is the one that version received — not the newest.
+    # A human revision produces a version no agent reviewed, which is why this
+    # is nullable rather than absent.
+    review = await memory.reviews.for_artifact(artifact_id, resolved.version.version)
+
     return ArtifactDetail.from_resolved(
         resolved,
         is_stale=resolved.artifact.id in stale,
+        review=ReviewView.build(
+            review,
+            title=resolved.artifact.title,
+            artifact_type=resolved.artifact.type,
+        )
+        if review
+        else None,
         versions=[
             VersionSummary(
                 version=item.version,
@@ -336,4 +355,105 @@ async def trace_graph(memory: SharedMemory, project_id: str) -> TraceGraph:
             and edge.downstream_artifact_id in artifacts
         ],
         stale_artifact_ids=sorted(stale_nodes),
+    )
+
+
+#: How many recommendations a reader will actually act on.
+_MAX_RECOMMENDATIONS = 6
+
+
+def _recommendations(views: list[ReviewView]) -> list[ReviewFindingView]:
+    """The suggestions worth putting in front of a user, weakest artifact first.
+
+    Two rules, both about usefulness rather than completeness:
+
+    - **Specific before generic.** A reasoning-derived suggestion names something
+      in the artifact ("document the 409 conflict response"); a check-derived one
+      is a template ("expand with more detail"). The specific one is the one a
+      person can act on, so it is offered first.
+    - **No repeats.** A check fires the same sentence on every thin artifact, and
+      the same line three times reads as noise rather than emphasis.
+    """
+    weakest = sorted(views, key=lambda view: view.quality_score)
+
+    ordered = [
+        suggestion
+        for source in ("reasoning", "check")
+        for view in weakest
+        for suggestion in view.suggestions
+        if suggestion.source == source
+    ]
+
+    seen: set[str] = set()
+    unique: list[ReviewFindingView] = []
+    for suggestion in ordered:
+        if suggestion.text in seen:
+            continue
+        seen.add(suggestion.text)
+        unique.append(suggestion)
+
+    return unique[:_MAX_RECOMMENDATIONS]
+
+
+async def project_reviews(memory: SharedMemory, project_id: str) -> ProjectReviewSummary:
+    """Assemble the Helix Review view.
+
+    Recommendations are drawn from the lowest-scoring artifacts rather than from
+    everything: a list of every suggestion in the project is a backlog nobody
+    reads, while the three worst artifacts are a next action.
+    """
+    reviews = await memory.reviews.list_for_project(project_id)
+
+    if not reviews:
+        return ProjectReviewSummary(project_id=project_id)
+
+    artifacts = {
+        artifact.id: artifact
+        for artifact in await memory.artifacts.list_for_project(project_id)
+    }
+
+    views = [
+        ReviewView.build(
+            review,
+            title=artifacts[review.artifact_id].title
+            if review.artifact_id in artifacts
+            else review.artifact_id,
+            artifact_type=artifacts[review.artifact_id].type
+            if review.artifact_id in artifacts
+            else None,
+        )
+        for review in reviews
+    ]
+
+    by_role: dict[AgentRole, list[ArtifactReview]] = {}
+    for review in reviews:
+        by_role.setdefault(review.role, []).append(review)
+
+    role_scores = [
+        RoleScore(
+            role=role,
+            role_title=ROLE_TITLES[role],
+            average_score=round(sum(item.quality_score for item in group) / len(group)),
+            artifacts_reviewed=len(group),
+            lowest_score=min(item.quality_score for item in group),
+            needs_revision=sum(1 for item in group if not item.verdict.is_acceptable),
+        )
+        for role, group in sorted(by_role.items(), key=lambda entry: entry[0].value)
+    ]
+
+    recommendations = _recommendations(views)
+
+    reasoned = sum(1 for review in reviews if review.reasoning_applied)
+
+    return ProjectReviewSummary(
+        project_id=project_id,
+        overall_score=round(sum(item.quality_score for item in reviews) / len(reviews)),
+        artifacts_reviewed=len(reviews),
+        reasoning_coverage=round(100 * reasoned / len(reviews)),
+        needs_revision=sum(1 for item in reviews if not item.verdict.is_acceptable),
+        by_role=role_scores,
+        recommendations=recommendations,
+        # Newest first: a reader wants the most recent judgement, and the review
+        # history reads as a log.
+        reviews=sorted(views, key=lambda view: view.created_at, reverse=True),
     )
