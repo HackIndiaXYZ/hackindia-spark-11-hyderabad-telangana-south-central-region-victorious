@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 
+import { TraceGraph } from "@/components/trace/trace-graph";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { api, stageLabel, typeLabel } from "@/lib/api";
@@ -72,6 +73,12 @@ export default async function TraceabilityPage({
           </CardContent>
         </Card>
       )}
+
+      <TraceGraph graph={graph} projectId={id} />
+
+      <h3 className="text-xs tracking-wide text-content-subtle uppercase">
+        Dependencies, artifact by artifact
+      </h3>
 
       {graph.nodes.length === 0 ? (
         <Card>

@@ -21,6 +21,7 @@ from app.api.schemas import (
     ArtifactSummary,
     CreateProjectRequest,
     EventView,
+    ImpactPreview,
     ProjectDetail,
     ProjectSummary,
     ReviseArtifactRequest,
@@ -189,6 +190,22 @@ async def get_artifact(
     exactly as the agent that consumed it saw it (ADR-0007).
     """
     return await views.artifact_detail(memory, artifact_id, version=version)
+
+
+@router.get(
+    "/{project_id}/artifacts/{artifact_id}/impact",
+    response_model=ImpactPreview,
+    summary="What changing this artifact would affect",
+)
+async def get_impact(
+    project_id: str, artifact_id: str, memory: MemoryDep
+) -> ImpactPreview:
+    """Compute the blast radius of a change without making one.
+
+    The question `04_Existing_Solutions.md` says no tool answers, asked *before*
+    the change rather than reported after it.
+    """
+    return await views.impact_preview(memory, project_id, artifact_id)
 
 
 @router.post(

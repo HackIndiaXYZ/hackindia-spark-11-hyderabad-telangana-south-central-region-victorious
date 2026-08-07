@@ -158,6 +158,13 @@ export interface AdvanceResponse {
   error: string | null;
 }
 
+export interface ImpactPreview {
+  artifact_id: string;
+  artifact_title: string;
+  impacted: ImpactedArtifactView[];
+  stages_affected: LifecycleStage[];
+}
+
 export interface TraceNode {
   id: string;
   title: string;
@@ -226,6 +233,12 @@ export const api = {
     apiRequest<ArtifactDetail>(
       `${V1}/projects/${projectId}/artifacts/${artifactId}` +
         (version ? `?version=${version}` : ""),
+      live,
+    ),
+
+  getImpact: (projectId: string, artifactId: string) =>
+    apiRequest<ImpactPreview>(
+      `${V1}/projects/${projectId}/artifacts/${artifactId}/impact`,
       live,
     ),
 

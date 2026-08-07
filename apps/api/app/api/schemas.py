@@ -397,6 +397,27 @@ class AdvanceResponse(BaseModel):
 # --- Traceability -------------------------------------------------------------
 
 
+class ImpactPreview(BaseModel):
+    """What changing an artifact would affect, computed before it changes.
+
+    `10_UI_UX_Plan.md` requires a reviewer to understand downstream impact before
+    acting. Showing it afterwards would make the platform a report of damage
+    rather than a tool for deciding.
+    """
+
+    artifact_id: str
+    artifact_title: str
+    impacted: list[ImpactedArtifactView] = Field(default_factory=list)
+    stages_affected: list[LifecycleStage] = Field(
+        default_factory=list,
+        description="Stages that would rerun if the change were re-synchronised.",
+    )
+
+    @property
+    def direct_count(self) -> int:
+        return sum(1 for item in self.impacted if item.depth == 1)
+
+
 class TraceNode(BaseModel):
     """One artifact in the traceability graph."""
 

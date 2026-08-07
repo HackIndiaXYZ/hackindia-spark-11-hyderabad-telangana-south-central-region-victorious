@@ -16,6 +16,7 @@ from app.api.schemas import (
     ArtifactSummary,
     EventView,
     ImpactedArtifactView,
+    ImpactPreview,
     ProjectDetail,
     ProjectSummary,
     StageSummary,
@@ -33,6 +34,7 @@ from app.domain.lifecycle import (
     LifecycleStage,
     StageStatus,
 )
+from app.domain.traceability import current_edges
 from app.memory.repository import SharedMemory
 
 #: Stages that represent work. ``IDEA`` is the state a project starts in.
@@ -237,6 +239,47 @@ async def list_events(
     return [EventView.build(event) for event in events]
 
 
+async def impact_preview(
+    memory: SharedMemory, project_id: str, artifact_id: str
+) -> ImpactPreview:
+    """What would go out of date if this artifact changed."""
+    artifact = await memory.artifacts.get(artifact_id)
+    analysis = await memory.traces.analyse_impact(project_id, artifact_id)
+
+    artifacts = {
+        item.id: item for item in await memory.artifacts.list_for_project(project_id)
+    }
+
+    impacted = [
+        ImpactedArtifactView(
+            artifact_id=item.artifact_id,
+            title=artifacts[item.artifact_id].title
+            if item.artifact_id in artifacts
+            else item.artifact_id,
+            type=artifacts[item.artifact_id].type if item.artifact_id in artifacts else None,
+            depth=item.depth,
+            via_kind=item.via_kind.value,
+        )
+        for item in analysis.impacted
+    ]
+
+    stages = sorted(
+        {
+            artifacts[item.artifact_id].stage
+            for item in analysis.impacted
+            if item.artifact_id in artifacts
+        },
+        key=lambda stage: STAGE_SEQUENCE.index(stage),
+    )
+
+    return ImpactPreview(
+        artifact_id=artifact_id,
+        artifact_title=artifact.title,
+        impacted=impacted,
+        stages_affected=stages,
+    )
+
+
 async def trace_graph(memory: SharedMemory, project_id: str) -> TraceGraph:
     """The full traceability graph, with staleness resolved per edge.
 
@@ -249,7 +292,11 @@ async def trace_graph(memory: SharedMemory, project_id: str) -> TraceGraph:
         for artifact in await memory.artifacts.list_for_project(project_id)
         if artifact.has_content
     }
-    edges = await memory.traces.list_for_project(project_id)
+    # Only the current declaration of each dependency. An agent that reruns adds
+    # a new edge rather than updating the old one, so the stored graph keeps a
+    # history of derivations; rendering all of them would draw the same
+    # dependency several times, each showing a different upstream version.
+    edges = current_edges(await memory.traces.list_for_project(project_id))
     current = await memory.artifacts.current_versions(project_id)
     stale_edge_ids = {
         stale.edge.id: stale for stale in await memory.traces.stale_edges(project_id)

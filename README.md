@@ -20,7 +20,7 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 7 of 10 complete — change propagation works end to end.**
+**Milestone 8 of 10 complete — the traceability graph is visible and navigable.**
 
 The whole platform runs end to end with **no API key and no network**: create a
 project from a name and a description, watch the organization work through nine
@@ -39,6 +39,11 @@ artifact. That is the question
 [`04_Existing_Solutions.md`](docs/04_Existing_Solutions.md) says nothing on the
 market answers. See
 [ADR-0012](docs/adr/0012-change-propagation-and-resynchronisation.md).
+
+The **Traceability** view draws that graph — 22 artifacts laid out by lifecycle
+stage, with stale derivations highlighted and a click to focus one artifact's
+dependencies. Before revising anything, the workspace shows the blast radius:
+*19 artifacts depend on this and would go out of date · 7 stages would rerun*.
 
 ```bash
 # terminal 1
