@@ -201,7 +201,7 @@ def build_runner(
     dispatcher = RegistryDispatcher()
     for role, stage in roles.items():
         agent_class = make_agent(role, stage)
-        dispatcher.register(role, agent_class(memory, resolved_provider, context, events))  # type: ignore[arg-type]
+        dispatcher.register(agent_class(memory, resolved_provider, context, events))  # type: ignore[arg-type]
 
     return OrchestrationRunner(memory, resolved_provider, events, dispatcher)  # type: ignore[arg-type]
 

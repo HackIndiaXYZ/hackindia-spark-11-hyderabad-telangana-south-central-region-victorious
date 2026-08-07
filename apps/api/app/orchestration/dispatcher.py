@@ -48,67 +48,94 @@ class AgentDispatcher(Protocol):
 
 
 class RegistryDispatcher:
-    """Dispatches to agents registered by role.
+    """Dispatches to agents registered by the stage they perform.
 
-    Registration is keyed by role rather than stage, and the stage-to-role
-    mapping comes from :data:`app.domain.lifecycle.STAGE_OWNERS`. That keeps a
-    single answer to "who owns this stage" — the domain's — rather than letting
-    the orchestrator hold a second, divergent opinion.
+    Keyed by stage rather than role because a role can own more than one stage:
+    the Software Architect performs both architecture and development planning,
+    and the Documentation agent both documentation and deployment preparation.
+    Keying by role would dispatch development planning to the architecture agent,
+    which would then write its artifacts tagged with the wrong stage.
+
+    Agents are registered whole rather than under a supplied key, and the
+    registration is validated against :data:`app.domain.lifecycle.STAGE_OWNERS`.
+    That keeps one answer to "who owns this stage" — the domain's — and makes a
+    mis-registration impossible rather than merely unlikely.
     """
 
     def __init__(self) -> None:
-        self._agents: dict[AgentRole, _Runnable] = {}
+        self._agents: dict[LifecycleStage, _Runnable] = {}
 
-    def register(self, role: AgentRole, agent: _Runnable) -> None:
-        """Register the agent filling a role.
+    def register(self, agent: _Runnable) -> None:
+        """Register an agent for the stage it declares.
 
         Raises:
-            ValueError: if the role is already filled. Two agents for one role
-                would make dispatch order decide which engineering opinion wins.
+            ValueError: if the stage is already filled, or if the agent's role
+                disagrees with the domain's owner for that stage.
         """
-        if role in self._agents:
-            raise ValueError(f"An agent is already registered for role {role.value}")
+        stage = agent.stage
+        role = agent.role
 
-        self._agents[role] = agent
-        logger.debug("Agent registered", extra={"role": role.value})
+        if stage in self._agents:
+            raise ValueError(f"An agent is already registered for stage {stage.value}")
+
+        expected = STAGE_OWNERS.get(stage)
+        if expected is None:
+            raise ValueError(f"No engineering role owns stage {stage.value}")
+
+        if role is not expected:
+            raise ValueError(
+                f"{type(agent).__name__} declares role {role.value}, but "
+                f"{stage.value} is owned by {expected.value}"
+            )
+
+        self._agents[stage] = agent
+        logger.debug(
+            "Agent registered", extra={"stage": stage.value, "role": role.value}
+        )
 
     def owns(self, stage: LifecycleStage) -> bool:
-        role = STAGE_OWNERS.get(stage)
-        return role is not None and role in self._agents
+        return stage in self._agents
 
     async def dispatch(
         self, stage: LifecycleStage, project_id: str, *, feedback: str | None = None
     ) -> AgentResult:
-        role = STAGE_OWNERS.get(stage)
+        agent = self._agents.get(stage)
 
-        if role is None:
-            raise DependencyNotSatisfiedError(
-                "No engineering role owns this stage",
-                details={"stage": stage.value},
-            )
-
-        agent = self._agents.get(role)
         if agent is None:
             raise DependencyNotSatisfiedError(
-                "No agent is registered for the role that owns this stage",
-                details={"stage": stage.value, "role": role.value},
+                "No agent is registered to perform this stage",
+                details={
+                    "stage": stage.value,
+                    "role": (owner.value if (owner := STAGE_OWNERS.get(stage)) else None),
+                },
             )
 
         return await agent.run(project_id, feedback=feedback)
 
     @property
+    def registered_stages(self) -> list[LifecycleStage]:
+        """Stages currently covered, for diagnostics."""
+        return sorted(self._agents, key=lambda stage: stage.value)
+
+    @property
     def registered_roles(self) -> list[AgentRole]:
-        """Roles currently filled, for diagnostics and the Organization view."""
-        return sorted(self._agents)
+        """Distinct roles currently filled, for the Organization view."""
+        return sorted({agent.role for agent in self._agents.values()})
 
 
 @runtime_checkable
 class _Runnable(Protocol):
-    """The single method the dispatcher needs from an agent.
+    """What the dispatcher needs from an agent: its identity and one method.
 
-    Narrower than :class:`app.agents.base.BaseAgent` on purpose: the dispatcher
+    Narrower than :class:`app.agents.base.BaseAgent` on purpose. The dispatcher
     depends on the capability it uses, not on the base class, so a differently
     implemented agent remains dispatchable.
     """
+
+    @property
+    def role(self) -> AgentRole: ...
+
+    @property
+    def stage(self) -> LifecycleStage: ...
 
     async def run(self, project_id: str, *, feedback: str | None = None) -> AgentResult: ...

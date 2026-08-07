@@ -20,23 +20,26 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 3 of 10 complete — Executive AI & lifecycle orchestration.**
+**Milestone 4 of 10 complete — the engineering organization is operational.**
 
-In place so far: the architectural boundaries, dependency injection,
-configuration, structured logging, error envelope, and health checking (M0); the
-shared organizational memory holding projects, artifacts with append-only version
-history, the traceability graph, agent runs, approvals, and events (M1); the
-reasoning-provider abstraction plus the agent execution framework (M2); and the
-Executive AI driving a LangGraph workflow across the nine lifecycle stages, with
-dependency gating, deterministic conflict detection, and human approval gates
-that genuinely halt (M3).
+A project now runs end to end: an idea becomes requirements, validated
+requirements become an architecture, an approved architecture becomes a plan, a
+scaffold, a test suite, documentation, and a deployment plan — through three
+human approval gates, with every artifact traced to what it was derived from.
 
-The seven engineering agents themselves arrive in Milestone 4. Until then the
-organization coordinates correctly and reports "no agent is registered to perform
-requirement_discovery" — the honest state of the system rather than a silent
-no-op.
+On the `13_Demo_and_Pitch.md` hospital scenario that is **22 artifacts across 8
+agent runs and 3 approval gates**, with the full traceability graph connecting
+them.
 
-Three properties are already load-bearing:
+Foundations behind it: architectural boundaries and DI (M0); shared organizational
+memory with append-only versioning and the traceability graph (M1); the
+provider abstraction and agent execution framework (M2); the Executive AI and its
+LangGraph workflow (M3).
+
+The workspace UI arrives in Milestone 5 — until then everything is exercised
+through the API and the test suite.
+
+Four properties are load-bearing:
 
 - **Staleness is computed, not stored.** The traceability model answers the
   question [`04_Existing_Solutions.md`](docs/04_Existing_Solutions.md) says
@@ -53,6 +56,11 @@ Three properties are already load-bearing:
   is structural rather than a matter of discipline. A test asserts that no
   artifact and no agent run is ever owned by the Executive role. See
   [ADR-0009](docs/adr/0009-orchestration-state-and-executive-boundary.md).
+- **Documents cannot drift from their data.** Agents emit structured fields; the
+  readable artifact is *rendered* from those fields rather than written
+  separately, so what a human reads and what the next agent consumes are the
+  same information. See
+  [ADR-0010](docs/adr/0010-agent-roster-and-stage-ownership.md).
 
 See [`docs/09_MVP_Roadmap.md`](docs/09_MVP_Roadmap.md) for scope and
 [`docs/adr/`](docs/adr/README.md) for decisions and deviations taken so far.
@@ -132,7 +140,7 @@ apps/
       memory/     Shared organizational memory + agent context assembly
       events/     Event bus (durable append + live fan-out)
       llm/        Provider abstraction: Anthropic, Gemini, fixture replay
-      agents/     Agent execution framework + prompts (roles land in M4)
+      agents/     The eight engineering agents, their contracts and prompts
       orchestration/  Executive AI, workflow graph, dependency & conflict rules
       api/        HTTP transport only
     tests/

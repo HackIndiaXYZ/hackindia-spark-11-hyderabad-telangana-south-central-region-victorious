@@ -18,6 +18,7 @@ fifteen specification documents are read-only input.
 | [0007](0007-traceability-model.md) | Traceability edges bind identity and record upstream version | Accepted | 1, 8 |
 | [0008](0008-fixture-provider-and-fallback.md) | Recorded fixtures are a first-class provider, and the fallback is silent-but-visible | Accepted | 2 |
 | [0009](0009-orchestration-state-and-executive-boundary.md) | Workflow state lives in shared memory, and the Executive AI cannot perform engineering work | Accepted | 3 |
+| [0010](0010-agent-roster-and-stage-ownership.md) | Eight agents fill seven roles, and artifacts are rendered from structured output | Accepted | 4 |
 
 ## Deviations from the specification
 
@@ -48,6 +49,12 @@ input documents, not decisions — listed so they are not mistaken for oversight
   it; `09`, `11`, and `14` omit it from the V1 roster. `06_Product_Architecture.md`
   nonetheless specifies a Design Center module. The Design Center is therefore
   out of MVP scope, with no agent to populate it until V2.
+- **Nine stages, six specialist roles.** `09_MVP_Roadmap.md` defines both the
+  lifecycle and the V1 roster but does not say which role owns which stage, and
+  the counts do not divide evenly. Resolved in
+  [ADR-0010](0010-agent-roster-and-stage-ownership.md): a role may own more than
+  one stage, and deployment preparation sits with Documentation until the V2
+  DevOps agent lands.
 - **Git integration is doubly placed.** `06_Product_Architecture.md` lists Git
   Integration, Pull Requests, and CI Status under the Development Center;
   `11_Future_Roadmap.md` places all three in Version 2. Treated as V2.

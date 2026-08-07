@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import time
 
+from app.agents.organization import build_organization
 from app.core.config import Settings
 from app.core.container import Container
 from app.core.health import ComponentHealth, HealthRegistry, HealthStatus
@@ -98,12 +99,17 @@ def build_container(settings: Settings) -> Container:
     provider = build_provider(settings.llm)
     container.register_instance(LLMProvider, provider)  # type: ignore[type-abstract]
 
-    # --- Orchestration -------------------------------------------------------
-    # The dispatcher is registered empty: Milestone 4 fills it with the seven
-    # engineering agents. Until then the Executive AI coordinates correctly and
-    # halts with "no agent is registered to perform <stage>", which is the honest
-    # state of the system rather than a silent no-op.
+    # --- The engineering organization ----------------------------------------
+    context_builder = container.resolve(ContextBuilder)
+    events = container.resolve(EventBus)
+
     dispatcher = RegistryDispatcher()
+    for agent in build_organization(memory, provider, context_builder, events):
+        # Registration validates the agent's role against the domain's owner for
+        # its stage, so a mis-wired organization fails at startup rather than
+        # producing artifacts attributed to the wrong specialist.
+        dispatcher.register(agent)
+
     container.register_instance(RegistryDispatcher, dispatcher)
     container.register_instance(
         AgentDispatcher,  # type: ignore[type-abstract]
@@ -112,7 +118,7 @@ def build_container(settings: Settings) -> Container:
 
     container.register_singleton(
         OrchestrationRunner,
-        lambda: OrchestrationRunner(memory, provider, container.resolve(EventBus), dispatcher),
+        lambda: OrchestrationRunner(memory, provider, events, dispatcher),
     )
 
     # --- Health --------------------------------------------------------------

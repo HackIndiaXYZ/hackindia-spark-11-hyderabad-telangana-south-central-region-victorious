@@ -26,7 +26,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 
-from app.agents.contracts import AgentOutput, AgentResult, ArtifactDraft
+from app.agents.contracts import AgentOutput, AgentResult, ArtifactDraft, TraceLink
 from app.agents.prompts import load_prompt
 from app.core.logging import get_correlation_id, get_logger
 from app.domain.agents import AgentRun, AgentRunStatus
@@ -36,7 +36,13 @@ from app.domain.events import EventType, ProjectEvent
 from app.domain.lifecycle import ROLE_TITLES, AgentRole, LifecycleStage
 from app.domain.traceability import TraceEdge
 from app.events.bus import EventBus
-from app.llm.provider import CompletionRequest, LLMProvider, Message, Role
+from app.llm.provider import (
+    CompletionRequest,
+    LLMProvider,
+    Message,
+    Role,
+    StructuredResponse,
+)
 from app.memory.context_builder import ContextBuilder, ProjectContext
 from app.memory.repository import SharedMemory
 
@@ -95,6 +101,26 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         """Return a short label for the Organization view. Overridable."""
         return f"{self.title} · {self.stage.value.replace('_', ' ')}"
 
+    def compose_artifacts(
+        self, output: TOutput, context: ProjectContext
+    ) -> list[ArtifactDraft]:
+        """Turn validated reasoning into the artifacts to persist.
+
+        The default writes whatever the model emitted in ``output.artifacts``.
+
+        Concrete agents override this to render their artifacts from the
+        *structured* fields of their own contract instead. Two reasons: a
+        rendered document then cannot drift from the data downstream agents
+        read, and the model spends its output budget on engineering content
+        rather than on re-formatting the same information as prose.
+        """
+        return list(output.artifacts)
+
+    @staticmethod
+    def _links(output: AgentOutput) -> list[TraceLink]:
+        """Upstream declarations to attach to every artifact from this run."""
+        return list(output.sources)
+
     async def run(self, project_id: str, *, feedback: str | None = None) -> AgentResult:
         """Execute one unit of engineering work.
 
@@ -134,8 +160,12 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         )
 
         try:
-            output = await self._reason(context, feedback)
-            artifact_ids, edge_ids = await self._persist(project_id, run, context, output)
+            response = await self._reason(context, feedback)
+            output = response.value
+            drafts = self.compose_artifacts(output, context)
+            artifact_ids, edge_ids = await self._persist(
+                project_id, run, context, output, drafts
+            )
         except Exception as exc:
             await self._fail(run, exc)
             raise
@@ -144,6 +174,13 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         run.confidence = output.confidence
         run.reasoning_summary = output.reasoning
         run.output_artifact_ids = artifact_ids
+        # Recorded per run because `12_Risk_Analysis.md` rates High Token
+        # Consumption a Medium risk. Measuring it is the precondition for the
+        # caching decision deferred in ADR-0005 — the intent is to decide from
+        # data rather than assumption.
+        run.token_usage = response.usage
+        run.provider = response.provider
+        run.model = response.model
         run.completed_at = datetime.now(UTC)
         await self._memory.runs.update(run)
 
@@ -185,8 +222,14 @@ class BaseAgent[TOutput: AgentOutput](ABC):
             edge_ids=edge_ids,
         )
 
-    async def _reason(self, context: ProjectContext, feedback: str | None) -> TOutput:
-        """Invoke the provider and return validated output."""
+    async def _reason(
+        self, context: ProjectContext, feedback: str | None
+    ) -> StructuredResponse[TOutput]:
+        """Invoke the provider and return the validated response.
+
+        Returns the whole response rather than just its value, so token usage and
+        the backend that actually served the request are recorded on the run.
+        """
         messages = [Message(role=Role.USER, content=self._compose_user_message(context))]
 
         if feedback:
@@ -201,7 +244,7 @@ class BaseAgent[TOutput: AgentOutput](ABC):
                 )
             )
 
-        response = await self._provider.complete_structured(
+        return await self._provider.complete_structured(
             CompletionRequest(
                 system=f"{load_prompt(SYSTEM_PROMPT)}\n\n{load_prompt(self.prompt_name)}",
                 messages=messages,
@@ -213,8 +256,6 @@ class BaseAgent[TOutput: AgentOutput](ABC):
             self.output_model,
         )
 
-        return response.value
-
     def _compose_user_message(self, context: ProjectContext) -> str:
         """Combine assembled context with this invocation's task."""
         return f"{context.render()}\n\n---\n\n# Your task\n\n{self.build_task(context)}"
@@ -225,6 +266,7 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         run: AgentRun,
         context: ProjectContext,
         output: AgentOutput,
+        drafts: list[ArtifactDraft],
     ) -> tuple[list[str], list[str]]:
         """Write artifacts and their trace edges.
 
@@ -235,7 +277,7 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         artifact_ids: list[str] = []
         edge_ids: list[str] = []
 
-        for draft in output.artifacts:
+        for draft in drafts:
             self._guard_against_orphan(draft, available)
 
             artifact = await self._memory.artifacts.create(

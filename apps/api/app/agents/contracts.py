@@ -89,8 +89,25 @@ class AgentOutput(BaseModel):
             "and should route to human review rather than be inflated."
         ),
     )
+    sources: list[TraceLink] = Field(
+        default_factory=list,
+        description=(
+            "Upstream artifacts this run was produced from, cited by the exact "
+            "IDs supplied in the agent's context. Required whenever context was "
+            "given — the agent base class rejects a run that produces work "
+            "without declaring what it was derived from."
+        ),
+    )
+
     artifacts: list[ArtifactDraft] = Field(
-        default_factory=list, description="Artifacts to write to shared memory."
+        default_factory=list,
+        description=(
+            "Artifacts written verbatim as the model emitted them. Most agents "
+            "leave this empty and render their artifacts from the structured "
+            "fields of their own contract instead, via "
+            "`BaseAgent.compose_artifacts` — so the readable document cannot "
+            "drift from the data downstream agents consume."
+        ),
     )
 
     concerns: list[str] = Field(
