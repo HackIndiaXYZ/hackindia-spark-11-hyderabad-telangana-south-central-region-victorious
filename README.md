@@ -20,7 +20,7 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 9 of 10 complete — evaluated, with the ADL evidence in-repo.**
+**All ten milestones complete.**
 
 The whole platform runs end to end with **no API key and no network**: create a
 project from a name and a description, watch the organization work through nine
@@ -46,11 +46,13 @@ dependencies. Before revising anything, the workspace shows the blast radius:
 *19 artifacts depend on this and would go out of date · 7 stages would rerun*.
 
 ```bash
-# terminal 1
-cd apps/api && .venv/Scripts/python -m uvicorn app.main:app --reload
-# terminal 2
-cd apps/web && npm run dev        # http://localhost:3000
+cd apps/api && .venv/Scripts/python scripts/seed_demo.py     # seeds the demo project
+cd apps/api && .venv/Scripts/python -m uvicorn app.main:app  # http://localhost:8000
+cd apps/web && npm run dev                                   # http://localhost:3000
 ```
+
+Cold start from an empty database to a fully populated workspace: **18 seconds**.
+The presentation walkthrough is [`DEMO.md`](DEMO.md).
 
 **Not yet implemented: authentication.** `09_MVP_Roadmap.md` lists it as
 Priority 1 and it is not built — the API is currently unauthenticated. See

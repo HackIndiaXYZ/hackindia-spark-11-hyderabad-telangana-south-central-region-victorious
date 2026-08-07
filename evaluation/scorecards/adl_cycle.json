@@ -1,6 +1,6 @@
 {
   "cycle": "traceability-convergence",
-  "generated_at": "2026-08-07T17:26:38.956883+00:00",
+  "generated_at": "2026-08-07T17:44:05.198961+00:00",
   "specification": "An artifact must stop being reported as out of date once it has been rebuilt against the current version of its upstream.",
   "measurements": {
     "baseline_after_delivery": {

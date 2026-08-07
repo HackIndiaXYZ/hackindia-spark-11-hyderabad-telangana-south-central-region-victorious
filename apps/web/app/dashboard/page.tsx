@@ -38,7 +38,7 @@ export default async function DashboardPage() {
 
   if ("unreachable" in data) {
     return (
-      <main className="mx-auto max-w-5xl px-6 py-12">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-6 py-12">
         <Card>
           <CardHeader>
             <CardTitle>API unreachable</CardTitle>
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
   const { projects, approvals } = data;
 
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-12">
+    <main id="main" tabIndex={-1} className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-12">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Engineering dashboard</h1>
         <p className="text-sm text-content-muted">

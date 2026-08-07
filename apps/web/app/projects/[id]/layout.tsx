@@ -76,7 +76,9 @@ export default async function ProjectLayout({
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-6 py-8">
+        {children}
+      </main>
     </div>
   );
 }
