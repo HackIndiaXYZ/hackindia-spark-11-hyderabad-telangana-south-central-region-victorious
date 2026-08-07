@@ -1,0 +1,68 @@
+{
+  "value": {
+    "objective": "Coordinate patient care, scheduling, and billing in one system.",
+    "target_users": [
+      "Reception staff",
+      "Doctors",
+      "Billing administrators"
+    ],
+    "functional_requirements": [
+      {
+        "id": "FR-01",
+        "title": "Register a patient",
+        "description": "Staff can create a patient record with demographics.",
+        "priority": "must",
+        "rationale": "Nothing else in the system works without a patient record."
+      },
+      {
+        "id": "FR-02",
+        "title": "Book an appointment",
+        "description": "Staff book a patient with a doctor at a time slot.",
+        "priority": "must",
+        "rationale": "Scheduling is the primary daily workflow."
+      }
+    ],
+    "non_functional_requirements": [
+      {
+        "id": "NFR-01",
+        "title": "Patient data confidentiality",
+        "description": "Records are accessible only to authorised roles.",
+        "priority": "must",
+        "rationale": "Clinical data carries regulatory obligations."
+      }
+    ],
+    "user_stories": [
+      {
+        "id": "US-01",
+        "as_a": "receptionist",
+        "i_want": "to book an appointment for a patient",
+        "so_that": "the patient is seen by the right doctor",
+        "acceptance_criteria": [
+          "Booking a free slot succeeds and returns a confirmation.",
+          "Booking an already-taken slot is rejected with a conflict error."
+        ],
+        "requirement_ids": [
+          "FR-02"
+        ],
+        "priority": "must"
+      }
+    ],
+    "out_of_scope": [
+      "Insurance claim submission"
+    ],
+    "open_questions": [
+      "Which regulatory regime applies to this deployment?"
+    ],
+    "reasoning": "The brief names patients, appointments, billing, doctors, and operations. I scoped the MVP to patient registration and appointment booking because billing depends on both and neither exists yet. Clinical data drove the confidentiality requirement; the regulatory regime is not stated, so I raised it as an open question rather than assuming one.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [],
+    "requires_approval": false,
+    "approval_reason": ""
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

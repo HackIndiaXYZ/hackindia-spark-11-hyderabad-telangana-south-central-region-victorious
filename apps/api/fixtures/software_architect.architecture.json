@@ -1,0 +1,91 @@
+{
+  "value": {
+    "style": "Modular monolith",
+    "style_rationale": "One team, no independent scaling need; seams allow later split.",
+    "components": [
+      {
+        "name": "patients",
+        "responsibility": "Owns patient records and demographics.",
+        "depends_on": [],
+        "requirement_ids": [
+          "FR-01"
+        ]
+      },
+      {
+        "name": "scheduling",
+        "responsibility": "Owns appointments and slot availability.",
+        "depends_on": [
+          "patients"
+        ],
+        "requirement_ids": [
+          "FR-02"
+        ]
+      }
+    ],
+    "technology_choices": [
+      {
+        "layer": "database",
+        "choice": "PostgreSQL",
+        "alternatives": [
+          "MongoDB"
+        ],
+        "rationale": "Appointments need transactional integrity across tables.",
+        "tradeoffs": "Flexible clinical notes need a JSONB column."
+      }
+    ],
+    "api_endpoints": [
+      {
+        "method": "POST",
+        "path": "/api/v1/appointments",
+        "purpose": "Book an appointment.",
+        "request_summary": "patient_id, doctor_id, slot",
+        "response_summary": "appointment with confirmation code",
+        "requirement_ids": [
+          "FR-02"
+        ]
+      }
+    ],
+    "data_entities": [
+      {
+        "name": "patient",
+        "purpose": "A person receiving care.",
+        "fields": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "nullable": false,
+            "description": "PK"
+          },
+          {
+            "name": "name",
+            "type": "text",
+            "nullable": false,
+            "description": ""
+          }
+        ],
+        "relationships": [
+          "one-to-many with appointment"
+        ]
+      }
+    ],
+    "scalability_notes": [
+      "Single instance is sufficient at the stated scale."
+    ],
+    "security_notes": [
+      "Role-based access on every patient-scoped endpoint."
+    ],
+    "reasoning": "One team, no independent scaling requirement, and two closely coupled domains: a modular monolith with clean seams is correct here, and distribution would be a cost with no matching benefit. PostgreSQL over MongoDB because appointments need transactional integrity across tables; the cost is that flexible clinical notes need a JSONB column.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [
+      "NFR-01 still names no roles, so the access-control design rests on an assumption rather than a stated requirement."
+    ],
+    "requires_approval": true,
+    "approval_reason": "Technology selection commits the project to PostgreSQL."
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

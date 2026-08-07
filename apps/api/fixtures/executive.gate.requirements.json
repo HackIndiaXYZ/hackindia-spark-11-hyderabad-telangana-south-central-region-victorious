@@ -1,0 +1,11 @@
+{
+  "value": {
+    "title": "Approve the requirements before the architecture is designed",
+    "what_changed": "The Product Manager defined the functional and non-functional requirements, user stories, and acceptance criteria. The Business Analyst validated them and flagged access control as underspecified.",
+    "why": "Everything the architect designs derives from these requirements. Approving them here prevents a design being built on scope you have not reviewed."
+  },
+  "usage": {
+    "input_tokens": 900,
+    "output_tokens": 220
+  }
+}

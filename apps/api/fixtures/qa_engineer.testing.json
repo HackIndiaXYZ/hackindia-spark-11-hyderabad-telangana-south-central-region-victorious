@@ -1,0 +1,54 @@
+{
+  "value": {
+    "strategy": "Cover booking conflicts first \u2014 the highest-risk behaviour.",
+    "test_cases": [
+      {
+        "id": "TC-01",
+        "title": "Double booking is rejected",
+        "given": "a slot already booked with a doctor",
+        "when": "a second booking is made for the same slot",
+        "then": "the request is rejected with a conflict error",
+        "kind": "integration",
+        "acceptance_criteria": "Booking an already-taken slot is rejected with a conflict error.",
+        "requirement_ids": [
+          "FR-02"
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "requirement_id": "FR-01",
+        "covered": false,
+        "test_case_ids": [],
+        "note": "No acceptance criteria were written for patient registration."
+      },
+      {
+        "requirement_id": "FR-02",
+        "covered": true,
+        "test_case_ids": [
+          "TC-01"
+        ],
+        "note": ""
+      }
+    ],
+    "defects": [
+      "The scaffold has no endpoint for FR-01 despite it being a must."
+    ],
+    "untestable": [
+      "NFR-01 names no roles, so authorisation cannot be tested."
+    ],
+    "reasoning": "Double booking is the highest-risk behaviour in the design, so it gets the first integration test. FR-01 has no acceptance criteria written against it, so I reported it uncovered rather than inventing an interpretation. The scaffold has no patient endpoint despite FR-01 being a must \u2014 that is a real defect, not speculation.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [
+      "FR-01 has no acceptance criteria, so patient registration cannot be verified against anything."
+    ],
+    "requires_approval": false,
+    "approval_reason": ""
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

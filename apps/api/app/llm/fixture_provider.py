@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,11 @@ logger = get_logger(__name__)
 #: Streaming replays in slices of this size so the UI exercises its incremental
 #: rendering path during a fixture-backed demo rather than receiving one blob.
 _STREAM_CHUNK_CHARS = 48
+
+#: Placeholder a fixture uses in place of project-specific upstream artifact IDs.
+UPSTREAM_TOKEN = "$upstream"  # noqa: S105 - a substitution token, not a credential
+
+_ARTIFACT_ID = re.compile(r"art_[0-9a-f]{32}")
 
 
 class FixtureProvider:
@@ -78,6 +84,9 @@ class FixtureProvider:
                 "Fixture is missing a 'value' object for structured output",
                 details={"fixture": self._path_for(request).name, "schema": schema.__name__},
             )
+
+        if isinstance(value_data, dict):
+            value_data = _expand_upstream(value_data, request)
 
         try:
             value = schema.model_validate(value_data)
@@ -159,6 +168,37 @@ def fixture_name(request: CompletionRequest) -> str:
         digest.update(message.role.value.encode("utf-8"))
         digest.update(message.content.encode("utf-8"))
     return f"anon_{digest.hexdigest()[:16]}"
+
+
+def _expand_upstream(value: dict[str, Any], request: CompletionRequest) -> dict[str, Any]:
+    """Resolve the ``$upstream`` token in a recorded ``sources`` field.
+
+    Artifact IDs are minted per project, so a recording made against one project
+    cites IDs that exist in no other. Without substitution a replayed fixture
+    could never declare its upstream, and the agent base class would reject every
+    downstream artifact as an orphan — making an offline demo impossible.
+
+    A fixture therefore records ``"sources": "$upstream"``, and this expands it to
+    the artifact IDs actually present in the current request's context. The
+    resulting edges are truthful: those are the artifacts the agent was shown.
+    """
+    if value.get("sources") != UPSTREAM_TOKEN:
+        return value
+
+    context = " ".join(message.content for message in request.messages)
+    artifact_ids = sorted(set(_ARTIFACT_ID.findall(context)))
+
+    return {
+        **value,
+        "sources": [
+            {
+                "upstream_artifact_id": artifact_id,
+                "kind": "derives_from",
+                "rationale": "Supplied as upstream engineering context for this stage.",
+            }
+            for artifact_id in artifact_ids
+        ],
+    }
 
 
 def _usage_of(payload: dict[str, Any]) -> TokenUsage:

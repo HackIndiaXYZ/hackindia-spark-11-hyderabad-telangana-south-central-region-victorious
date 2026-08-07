@@ -1,0 +1,45 @@
+{
+  "value": {
+    "sequencing_rationale": "Data model first; scheduling conflict logic is riskiest.",
+    "tasks": [
+      {
+        "id": "T-01",
+        "title": "Patient schema and migrations",
+        "description": "Create the patient table and its migration.",
+        "component": "patients",
+        "depends_on": [],
+        "requirement_ids": [
+          "FR-01"
+        ],
+        "estimate": "half a day"
+      },
+      {
+        "id": "T-02",
+        "title": "Appointment booking with conflict rejection",
+        "description": "Booking endpoint that rejects double-booked slots.",
+        "component": "scheduling",
+        "depends_on": [
+          "T-01"
+        ],
+        "requirement_ids": [
+          "FR-02"
+        ],
+        "estimate": "one day"
+      }
+    ],
+    "milestones": [
+      "Appointments can be booked and listed through the API."
+    ],
+    "reasoning": "The patient schema comes first because everything references it, and the booking conflict logic second because it is the least certain part of the design. Deferring it would mean discovering a design problem at the point where changing it is most expensive.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [],
+    "requires_approval": false,
+    "approval_reason": ""
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

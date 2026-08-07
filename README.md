@@ -20,7 +20,28 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 4 of 10 complete — the engineering organization is operational.**
+**Milestone 5 of 10 complete — the workspace is usable.**
+
+The whole platform now runs end to end with **no API key and no network**: create
+a project from a name and a description, watch the organization work through nine
+lifecycle stages, approve three gates, and read all 22 generated artifacts in the
+browser — rendered markdown, tables, Mermaid component diagrams, code, and full
+version history.
+
+```bash
+# terminal 1
+cd apps/api && .venv/Scripts/python -m uvicorn app.main:app --reload
+# terminal 2
+cd apps/web && npm run dev        # http://localhost:3000
+```
+
+**Not yet implemented: authentication.** `09_MVP_Roadmap.md` lists it as
+Priority 1 and it is not built — the API is currently unauthenticated. See
+[Known gaps](#known-gaps).
+
+---
+
+**Milestone 4 — the engineering organization is operational.**
 
 A project now runs end to end: an idea becomes requirements, validated
 requirements become an architecture, an approved architecture becomes a plan, a
@@ -174,6 +195,27 @@ read-only input by this implementation. Start with
 [`docs/adr/`](docs/adr/README.md) records every decision the specification did
 not settle, every deviation from it, and the specification gaps found during
 review.
+
+---
+
+## Known gaps
+
+Stated plainly rather than discovered later.
+
+- **No authentication.** `09_MVP_Roadmap.md` lists it Priority 1; it is not
+  implemented, so the API accepts any caller. Acceptable for local development
+  and a demo, not for deployment. Scheduled before release.
+- **Docker compose is unverified.** The Dockerfiles and compose file are written
+  but have never been run — Docker is not installed on the development machine.
+  See [ADR-0005](docs/adr/0005-runtime-infrastructure-deviations.md).
+- **Prompts are untuned against a live model.** Every test and the demo corpus
+  run on recorded fixtures. The contracts and plumbing are verified; the quality
+  of real model output is not yet.
+- **The traceability graph is over-connected.** Agents declare their sources once
+  per run, so a late agent that read sixteen artifacts cites all sixteen. The
+  edges are accurate but impact analysis is less discriminating downstream. See
+  [ADR-0010](docs/adr/0010-agent-roster-and-stage-ownership.md).
+- **No syntax highlighting** in rendered code blocks — legible monospace only.
 
 ---
 

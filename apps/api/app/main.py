@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import health as health_router
+from app.api.routers import projects
 from app.core.bootstrap import build_container
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
@@ -90,6 +91,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(health_router.router)
+    app.include_router(projects.router, prefix=resolved.api_prefix)
+    app.include_router(projects.approvals_router, prefix=resolved.api_prefix)
 
     return app
 

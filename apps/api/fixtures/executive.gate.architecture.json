@@ -1,0 +1,11 @@
+{
+  "value": {
+    "title": "Approve the architecture before work is planned against it",
+    "what_changed": "The Software Architect proposed a modular monolith with patients and scheduling components, selected PostgreSQL over MongoDB, and defined the API contract and data model.",
+    "why": "The implementation plan and the generated scaffold both derive from this design. The technology selection in particular is expensive to reverse once code exists."
+  },
+  "usage": {
+    "input_tokens": 900,
+    "output_tokens": 220
+  }
+}

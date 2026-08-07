@@ -1,0 +1,46 @@
+{
+  "value": {
+    "feasibility": "viable_with_changes",
+    "assessment": "The core workflows are sound; access control is underspecified.",
+    "validated_requirement_ids": [
+      "FR-01",
+      "FR-02"
+    ],
+    "questioned_requirement_ids": [
+      "NFR-01"
+    ],
+    "gaps": [
+      {
+        "area": "Access control",
+        "description": "NFR-01 names no roles or permission model.",
+        "severity": "high",
+        "recommendation": "Define roles before the architecture is designed.",
+        "requirement_ids": [
+          "NFR-01"
+        ]
+      }
+    ],
+    "risks": [
+      {
+        "description": "Clinical data handling may require regional certification.",
+        "impact": "high",
+        "likelihood": "possible",
+        "mitigation": "Confirm the applicable regime before go-live."
+      }
+    ],
+    "opportunities": [
+      "Appointment reminders would reduce no-shows."
+    ],
+    "reasoning": "FR-01 and FR-02 are specific and testable. NFR-01 names no roles and no permission model, so two engineers would implement it differently \u2014 I questioned it rather than letting the architect guess. The regulatory exposure follows from the domain and belongs on the risk register.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [],
+    "requires_approval": false,
+    "approval_reason": ""
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

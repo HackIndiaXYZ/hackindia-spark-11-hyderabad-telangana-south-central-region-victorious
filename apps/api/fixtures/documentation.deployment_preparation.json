@@ -1,0 +1,30 @@
+{
+  "value": {
+    "overview": "Containerised deployment behind a managed PostgreSQL instance.",
+    "checklist": [
+      "Run migrations and confirm the schema version."
+    ],
+    "environment_variables": [
+      "DATABASE_URL \u2014 PostgreSQL connection string"
+    ],
+    "containerisation": "FROM python:3.12-slim",
+    "rollback": [
+      "Redeploy the previous image; column drops are not reversible."
+    ],
+    "outstanding": [
+      "Authentication is not implemented.",
+      "FR-01 has no endpoint."
+    ],
+    "reasoning": "The plan follows the approved PostgreSQL and container decisions and introduces no infrastructure the organization did not choose. Environment variables are listed by name and purpose only. Authentication being absent and FR-01 having no endpoint genuinely block a production release.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [],
+    "requires_approval": false,
+    "approval_reason": ""
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

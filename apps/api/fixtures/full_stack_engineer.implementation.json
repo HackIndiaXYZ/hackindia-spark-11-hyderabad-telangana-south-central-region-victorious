@@ -1,0 +1,33 @@
+{
+  "value": {
+    "repository_tree": [
+      "app/",
+      "app/patients/models.py",
+      "app/scheduling/api.py"
+    ],
+    "stack_summary": "FastAPI over PostgreSQL, matching the approved decisions.",
+    "files": [
+      {
+        "path": "app/patients/models.py",
+        "language": "python",
+        "purpose": "Patient record model, realising FR-01.",
+        "content": "class Patient:\n    id: UUID\n    name: str\n"
+      }
+    ],
+    "not_implemented": [
+      "Authentication flows",
+      "Database migrations"
+    ],
+    "reasoning": "I wrote the patient model because it is where the approved data design becomes concrete, and left package manifests and lint configuration to the tree. Authentication and migrations are genuinely absent and recorded as such \u2014 this is a scaffold, not a running system.",
+    "confidence": 0.86,
+    "sources": "$upstream",
+    "artifacts": [],
+    "concerns": [],
+    "requires_approval": false,
+    "approval_reason": ""
+  },
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 1800
+  }
+}

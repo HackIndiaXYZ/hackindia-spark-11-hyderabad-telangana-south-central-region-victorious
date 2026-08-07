@@ -1,0 +1,11 @@
+{
+  "value": {
+    "title": "Authorise code generation",
+    "what_changed": "The implementation plan sequences the approved architecture into dependency-ordered tasks, starting with the data model and the booking conflict logic.",
+    "why": "This is the last gate before the organization writes the repository scaffold. Everything generated will trace back to this plan."
+  },
+  "usage": {
+    "input_tokens": 900,
+    "output_tokens": 220
+  }
+}
