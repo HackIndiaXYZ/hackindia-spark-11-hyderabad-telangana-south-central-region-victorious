@@ -141,3 +141,21 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Claude Code local settings (per-machine, not shared)
+.claude/settings.local.json
+
+# --- Python (apps/api) --------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local databases and embedded vector store
+*.db
+*.sqlite3
+.chroma/

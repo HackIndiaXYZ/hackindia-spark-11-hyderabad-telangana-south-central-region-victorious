@@ -1,0 +1,60 @@
+# Project Victorious — local orchestration.
+#
+# PostgreSQL runs here while SQLite remains the zero-setup default for native
+# development (ADR-0005). Redis and a standalone vector-store service are
+# deliberately absent — the cache is deferred, and ChromaDB runs embedded.
+
+name: victorious
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: victorious
+      POSTGRES_PASSWORD: victorious
+      POSTGRES_DB: victorious
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # Gates api startup: without this the API races the database on boot.
+      test: ["CMD-SHELL", "pg_isready -U victorious -d victorious"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      VICTORIOUS_ENVIRONMENT: local
+      VICTORIOUS_DATABASE__URL: postgresql+asyncpg://victorious:victorious@postgres:5432/victorious
+      VICTORIOUS_CORS_ORIGINS: http://localhost:3000
+      VICTORIOUS_LLM__PROVIDER: ${VICTORIOUS_LLM__PROVIDER:-anthropic}
+      VICTORIOUS_LLM__ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      VICTORIOUS_LLM__GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        # Read by the browser, so it must be the host-published address rather
+        # than the compose service name.
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    environment:
+      # Server components reach the API over the compose network instead.
+      API_INTERNAL_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  postgres_data:
