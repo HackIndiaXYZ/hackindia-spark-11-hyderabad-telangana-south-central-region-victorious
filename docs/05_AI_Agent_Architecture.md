@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The proposed platform is designed as an AI-native engineering organization composed of multiple specialized reasoning agents collaborating under the supervision of a central orchestration layer. Instead of relying on a single large language model to perform every engineering task, the system decomposes software engineering into specialized domains that closely mirror the structure of real-world engineering organizations. Each agent owns a clearly defined responsibility, possesses its own reasoning process, operates using shared project context, and communicates through structured workflows coordinated by a central Coordinator Agent. This architecture enables parallel reasoning, continuous validation, lifecycle-wide consistency, modular scalability, and human-in-the-loop decision making.
+The proposed platform is designed as an AI-native engineering organization composed of multiple specialized reasoning agents collaborating under the supervision of a central orchestration layer. Instead of relying on a single large language model to perform every engineering task, the system decomposes software engineering into specialized domains that closely mirror the structure of real-world engineering organizations. Each agent owns a clearly defined responsibility, possesses its own reasoning process, operates using shared project context, and communicates through structured workflows coordinated by a central Executive AI (Engineering Director). This architecture enables parallel reasoning, continuous validation, lifecycle-wide consistency, modular scalability, and human-in-the-loop decision making.
 
 ---
 
@@ -22,69 +22,62 @@ The objective is to simulate the behavior of an experienced software engineering
 
 ---
 
+Relationship with Mutagent
+
+Project Victorious is implemented using Mutagent's Agentic Development Lifecycle (ADL), but its internal AI architecture is intentionally independent from Mutagent's orchestration model.
+
+Mutagent is responsible for continuously developing and improving Project Victorious through Specification, Build, Evaluation, Diagnosis, and Optimization.
+
+The architecture described below represents the internal AI Software Engineering Organization implemented within Project Victorious after development.
+
+Mutagent therefore operates outside this architecture as the engineering lifecycle responsible for improving it, rather than participating in its runtime execution.
+
 # Overall Architecture
 
 The platform is organized around one central orchestration agent supported by multiple specialized engineering agents.
 
-Idea
+            Business Idea
+        │
+        ▼
+Executive AI (Engineering Director)
+        │
+        ▼
+Product Planning Department
+├── Product Manager Agent
+└── Business Analyst Agent
+        │
+        ▼
+Architecture Department
+├── Software Architect Agent
+└── UI/UX Designer Agent
+        │
+        ▼
+Engineering Department
+├── Frontend Engineer Agent
+├── Backend Engineer Agent
+└── Database Engineer Agent
+        │
+        ▼
+Quality & Security Department
+├── QA Engineer Agent
+└── Security Agent
+        │
+        ▼
+Operations Department
+├── DevOps Agent
+└── Documentation Agent
+        │
+        ▼
+Production-Ready Software Product
+        │
+        ▼
+Continuous Feedback & Evolution
 
-↓
-
-Coordinator Agent
-
-↓
-
-Product Manager Agent
-
-↓
-
-Business Analyst Agent
-
-↓
-
-Software Architect Agent
-
-↓
-
-UI/UX Designer Agent
-
-↓
-
-Database Engineer Agent
-
-↓
-
-Backend Engineer Agent
-
-↓
-
-Frontend Engineer Agent
-
-↓
-
-QA Engineer Agent
-
-↓
-
-Security Engineer Agent
-
-↓
-
-DevOps Engineer Agent
-
-↓
-
-Documentation Agent
-
-↓
-
-Production Ready Software
-
-The Coordinator Agent manages the overall workflow while each specialized agent contributes expertise within its own engineering domain.
+The  Executive AI (Engineering Director)manages the overall workflow while each specialized agent contributes expertise within its own engineering domain.
 
 ---
 
-# Coordinator Agent
+# Executive AI (Engineering Director)
 
 ## Responsibility
 
@@ -414,4 +407,4 @@ The proposed AI Agent Architecture transforms software engineering from a sequen
 
 # AI Implementation Notes
 
-Every agent should be implemented as an independent, reusable module with clearly defined inputs, outputs, responsibilities, and communication interfaces. Agents should avoid directly modifying each other's internal state and instead exchange structured messages through the Coordinator Agent or a centralized orchestration layer. Shared memory should serve as the single source of truth for project knowledge, ensuring that requirements, architecture, documentation, implementation artifacts, and engineering decisions remain synchronized throughout the lifecycle. The implementation should prioritize loose coupling, high cohesion, scalability, observability, and provider-agnostic AI integration so that individual agents, reasoning models, or external services can be upgraded or replaced without affecting the overall system architecture.
+Every agent should be implemented as an independent, reusable module with clearly defined inputs, outputs, responsibilities, and communication interfaces. Agents should avoid directly modifying each other's internal state and instead exchange structured messages through the Executive AI (Engineering Director) or a centralized orchestration layer. Shared memory should serve as the single source of truth for project knowledge, ensuring that requirements, architecture, documentation, implementation artifacts, and engineering decisions remain synchronized throughout the lifecycle. The implementation should prioritize loose coupling, high cohesion, scalability, observability, and provider-agnostic AI integration so that individual agents, reasoning models, or external services can be upgraded or replaced without affecting the overall system architecture.
