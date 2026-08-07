@@ -25,6 +25,8 @@ from app.memory.context_builder import ContextBuilder
 from app.memory.health import DatabaseHealthCheck
 from app.memory.repository import SharedMemory
 from app.memory.sql_repository import SqlSharedMemory
+from app.orchestration.dispatcher import AgentDispatcher, RegistryDispatcher
+from app.orchestration.runner import OrchestrationRunner
 
 logger = get_logger(__name__)
 
@@ -95,6 +97,23 @@ def build_container(settings: Settings) -> Container:
     # changing VICTORIOUS_LLM__PROVIDER changes the backend for every agent.
     provider = build_provider(settings.llm)
     container.register_instance(LLMProvider, provider)  # type: ignore[type-abstract]
+
+    # --- Orchestration -------------------------------------------------------
+    # The dispatcher is registered empty: Milestone 4 fills it with the seven
+    # engineering agents. Until then the Executive AI coordinates correctly and
+    # halts with "no agent is registered to perform <stage>", which is the honest
+    # state of the system rather than a silent no-op.
+    dispatcher = RegistryDispatcher()
+    container.register_instance(RegistryDispatcher, dispatcher)
+    container.register_instance(
+        AgentDispatcher,  # type: ignore[type-abstract]
+        dispatcher,
+    )
+
+    container.register_singleton(
+        OrchestrationRunner,
+        lambda: OrchestrationRunner(memory, provider, container.resolve(EventBus), dispatcher),
+    )
 
     # --- Health --------------------------------------------------------------
     health_registry = HealthRegistry()

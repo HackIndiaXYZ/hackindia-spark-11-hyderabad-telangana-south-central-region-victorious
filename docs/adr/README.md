@@ -17,6 +17,7 @@ fifteen specification documents are read-only input.
 | [0006](0006-code-generation-depth.md) | Generated output is an inspectable scaffold, not a runnable application | Accepted | 0, 4 |
 | [0007](0007-traceability-model.md) | Traceability edges bind identity and record upstream version | Accepted | 1, 8 |
 | [0008](0008-fixture-provider-and-fallback.md) | Recorded fixtures are a first-class provider, and the fallback is silent-but-visible | Accepted | 2 |
+| [0009](0009-orchestration-state-and-executive-boundary.md) | Workflow state lives in shared memory, and the Executive AI cannot perform engineering work | Accepted | 3 |
 
 ## Deviations from the specification
 
@@ -30,6 +31,8 @@ specification text, and why.
 | ChromaDB service (`08`, `14`) | Embedded client, disabled by default | [0005](0005-runtime-infrastructure-deviations.md) |
 | PostgreSQL (`08`, `14`) | PostgreSQL in compose, SQLite for native development | [0005](0005-runtime-infrastructure-deviations.md) |
 | "Production-ready software" (`01`, `02`, `14`) | Inspectable generated scaffold | [0006](0006-code-generation-depth.md) |
+| LangGraph as the workflow engine (`08`) | Used for graph structure and routing; its checkpointer is deliberately unused so shared memory stays the single source of truth | [0009](0009-orchestration-state-and-executive-boundary.md) |
+| Executive AI listed among the agents (`05`) | Implemented in the orchestration layer with no artifact-writing path, so `15`'s "does not perform engineering work" is structural | [0009](0009-orchestration-state-and-executive-boundary.md) |
 
 ## Unresolved specification gaps
 

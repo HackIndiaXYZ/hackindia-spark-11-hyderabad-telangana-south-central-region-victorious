@@ -20,16 +20,23 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 2 of 10 complete — Provider abstraction & agent framework.**
+**Milestone 3 of 10 complete — Executive AI & lifecycle orchestration.**
 
 In place so far: the architectural boundaries, dependency injection,
 configuration, structured logging, error envelope, and health checking (M0); the
 shared organizational memory holding projects, artifacts with append-only version
-history, the traceability graph, agent runs, approvals, and events (M1); and the
-reasoning-provider abstraction plus the agent execution framework (M2). The seven
-engineering agents themselves arrive in Milestone 4.
+history, the traceability graph, agent runs, approvals, and events (M1); the
+reasoning-provider abstraction plus the agent execution framework (M2); and the
+Executive AI driving a LangGraph workflow across the nine lifecycle stages, with
+dependency gating, deterministic conflict detection, and human approval gates
+that genuinely halt (M3).
 
-Two properties are already load-bearing:
+The seven engineering agents themselves arrive in Milestone 4. Until then the
+organization coordinates correctly and reports "no agent is registered to perform
+requirement_discovery" — the honest state of the system rather than a silent
+no-op.
+
+Three properties are already load-bearing:
 
 - **Staleness is computed, not stored.** The traceability model answers the
   question [`04_Existing_Solutions.md`](docs/04_Existing_Solutions.md) says
@@ -40,6 +47,12 @@ Two properties are already load-bearing:
 - **No agent can produce an orphan.** The agent base class rejects any artifact
   that fails to declare the upstream it was derived from, so nothing can be
   invisible to impact analysis.
+- **The Executive AI cannot perform engineering work.** It lives in the
+  orchestration layer with no artifact-writing path at all, so
+  [`15_Development_Guidelines.md`](docs/15_Development_Guidelines.md)'s boundary
+  is structural rather than a matter of discipline. A test asserts that no
+  artifact and no agent run is ever owned by the Executive role. See
+  [ADR-0009](docs/adr/0009-orchestration-state-and-executive-boundary.md).
 
 See [`docs/09_MVP_Roadmap.md`](docs/09_MVP_Roadmap.md) for scope and
 [`docs/adr/`](docs/adr/README.md) for decisions and deviations taken so far.
@@ -120,6 +133,7 @@ apps/
       events/     Event bus (durable append + live fan-out)
       llm/        Provider abstraction: Anthropic, Gemini, fixture replay
       agents/     Agent execution framework + prompts (roles land in M4)
+      orchestration/  Executive AI, workflow graph, dependency & conflict rules
       api/        HTTP transport only
     tests/
   web/            Next.js — the engineering workspace

@@ -97,10 +97,17 @@ class ProjectContext:
             sections.extend(
                 [
                     f"### {entry.artifact.title}{marker}",
-                    f"_Type: {entry.artifact.type.value} · "
+                    # The artifact ID is emitted deliberately and prominently:
+                    # the shared system prompt requires every output to declare
+                    # the upstream it derived from using these exact IDs, and the
+                    # agent base class rejects artifacts that cite anything it was
+                    # not shown. Omitting them here would make that contract
+                    # impossible to satisfy.
+                    f"- **Artifact ID:** `{entry.artifact.id}`",
+                    f"- Type: {entry.artifact.type.value} · "
                     f"Stage: {entry.artifact.stage.value} · "
                     f"Version: {entry.version} · "
-                    f"Status: {entry.artifact.status.value}_",
+                    f"Status: {entry.artifact.status.value}",
                     "",
                     entry.body_markdown,
                     "",
