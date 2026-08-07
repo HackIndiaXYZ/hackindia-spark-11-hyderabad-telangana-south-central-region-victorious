@@ -62,15 +62,29 @@ export class ApiUnreachableError extends Error {
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+/**
+ * Where to send a request, which differs by where the code is running.
+ *
+ * **Server components** call the API directly over the compose network.
+ *
+ * **The browser** goes through the same-origin rewrite proxy declared in
+ * `next.config.ts` — an empty base, so the request is relative to whatever host
+ * the page was served from. That is what keeps client-side calls working on
+ * `127.0.0.1:3000`, a LAN IP, or any host other than the single origin the API's
+ * CORS allowlist names. A deployment that deliberately points the browser at a
+ * separate API host can still opt out by setting `NEXT_PUBLIC_API_URL`, in which
+ * case that origin must be in the API's allowlist.
+ */
 function resolveBaseUrl(): string {
-  // Server components talk to the API over the compose network; the browser
-  // reaches it through the host-published port. Both are configured, never guessed.
-  const fromEnv =
-    typeof window === "undefined"
-      ? process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL
-      : process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined") {
+    return (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+  }
 
-  return (fromEnv ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+  return (
+    process.env.API_INTERNAL_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://127.0.0.1:8000"
+  ).replace(/\/$/, "");
 }
 
 interface RequestOptions extends Omit<RequestInit, "signal"> {

@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Check, Loader2, MessageSquare } from "lucide-react";
+import { Check, CircleAlert, Loader2, MessageSquare } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Field, Textarea } from "@/components/ui/field";
 import { api } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 
@@ -13,6 +15,10 @@ import { ApiError } from "@/lib/api-client";
  * Requesting changes requires feedback, enforced here as well as by the API: the
  * feedback is fed into the agent's context on re-run, so a rejection without a
  * reason leaves the organization to guess what to do differently.
+ *
+ * The two actions are deliberately unequal in weight. Approving is the common
+ * path and gets the solid control; requesting changes is a considered act and
+ * opens a field first, so it cannot happen on a stray click.
  */
 export function ApprovalDecision({ approvalId }: { approvalId: string }) {
   const router = useRouter();
@@ -43,53 +49,62 @@ export function ApprovalDecision({ approvalId }: { approvalId: string }) {
   return (
     <div className="space-y-3 border-t border-border pt-4">
       {showFeedback && (
-        <div className="space-y-1.5">
-          <label htmlFor={`feedback-${approvalId}`} className="block text-xs text-content-subtle">
-            What needs to change?
-          </label>
-          <textarea
-            id={`feedback-${approvalId}`}
-            value={feedback}
-            onChange={(event) => setFeedback(event.target.value)}
-            rows={3}
-            placeholder="Billing scope is unclear — split it into its own requirement."
-            className="w-full resize-y rounded-md border border-border bg-canvas px-3 py-2 text-sm text-content placeholder:text-content-subtle focus:border-accent focus:outline-none"
-          />
+        <div className="animate-[rise_0.3s_var(--ease-out-quint)_both]">
+          <Field
+            label="What needs to change?"
+            htmlFor={`feedback-${approvalId}`}
+            hint="This goes into the agent's context on its next attempt."
+          >
+            <Textarea
+              id={`feedback-${approvalId}`}
+              value={feedback}
+              onChange={(event) => setFeedback(event.target.value)}
+              rows={3}
+              autoFocus
+              placeholder="Billing scope is unclear — split it into its own requirement."
+            />
+          </Field>
         </div>
       )}
 
       {error && (
-        <p role="alert" className="text-xs text-state-blocked">
+        <p
+          role="alert"
+          className="flex animate-[fade-in_0.25s_ease-out_both] items-center gap-2 text-xs text-state-blocked"
+        >
+          <CircleAlert className="size-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
       )}
 
       <div className="flex flex-wrap gap-2">
-        <button
+        <Button
           type="button"
+          variant="approve"
+          size="sm"
           onClick={() => decide("approved")}
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-md bg-state-complete/15 px-3 py-1.5 text-sm text-state-complete transition-colors hover:bg-state-complete/25 disabled:opacity-40"
         >
           {busy ? (
-            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            <Loader2 className="animate-spin" aria-hidden="true" />
           ) : (
-            <Check className="size-3.5" aria-hidden="true" />
+            <Check aria-hidden="true" />
           )}
           Approve
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={() =>
             showFeedback ? decide("changes_requested") : setShowFeedback(true)
           }
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-md border border-border-strong px-3 py-1.5 text-sm text-content-muted transition-colors hover:bg-surface-raised disabled:opacity-40"
         >
-          <MessageSquare className="size-3.5" aria-hidden="true" />
+          <MessageSquare aria-hidden="true" />
           Request changes
-        </button>
+        </Button>
       </div>
     </div>
   );

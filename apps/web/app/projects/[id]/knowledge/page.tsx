@@ -1,4 +1,8 @@
+import { Library } from "lucide-react";
+
 import { ArtifactList } from "@/components/artifact-list";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader, SectionLabel } from "@/components/ui/page-header";
 import { api, stageLabel, type LifecycleStage } from "@/lib/api";
 
 /**
@@ -30,33 +34,50 @@ export default async function KnowledgePage({
   const stale = artifacts.filter((artifact) => artifact.is_stale).length;
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h2 className="text-sm font-medium tracking-tight">Knowledge Base</h2>
-        <p className="text-sm text-content-muted">
-          Every artifact the organization has produced — {artifacts.length} in total
-          {stale > 0 && (
-            <>
-              , <span className="text-state-stale">{stale} out of date</span> with their
-              upstream
-            </>
-          )}
-          .
-        </p>
-      </header>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Memory"
+        title="Knowledge Base"
+        description={
+          <>
+            Every artifact the organization has produced — {artifacts.length} in total
+            {stale > 0 && (
+              <>
+                , <span className="text-state-stale">{stale} out of date</span> with
+                their upstream
+              </>
+            )}
+            .
+          </>
+        }
+        actions={
+          stale > 0 ? (
+            <span className="rounded-full border border-state-stale/30 bg-state-stale/[0.08] px-2.5 py-1 font-mono text-[11px] text-state-stale">
+              {stale} stale
+            </span>
+          ) : undefined
+        }
+        className="animate-[rise_0.4s_var(--ease-out-quint)_both]"
+      />
 
       {artifacts.length === 0 ? (
-        <ArtifactList
-          projectId={id}
-          artifacts={[]}
-          empty="The organization has not produced anything yet."
+        <EmptyState
+          icon={Library}
+          title="The organizational memory is empty"
+          description="The organization has not produced anything yet. Use Advance engineering and artifacts will appear here, grouped by the stage that produced them."
         />
       ) : (
         [...byStage.entries()].map(([stage, group]) => (
-          <section key={stage} className="space-y-2">
-            <h3 className="text-xs tracking-wide text-content-subtle uppercase">
+          <section key={stage} className="space-y-3">
+            <SectionLabel
+              trailing={
+                <span className="font-mono text-[11px] text-content-subtle">
+                  {group.length}
+                </span>
+              }
+            >
               {stageLabel(stage)}
-            </h3>
+            </SectionLabel>
             <ArtifactList projectId={id} artifacts={group} empty="" />
           </section>
         ))

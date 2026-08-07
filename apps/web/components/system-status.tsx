@@ -12,6 +12,9 @@ import { ApiUnreachableError, fetchHealth, type HealthReport } from "@/lib/api-c
  * a broken link in that chain is visible immediately instead of at integration
  * time. As later milestones register their own health checks (the memory
  * repository, the LLM providers), each appears here with no change to this file.
+ *
+ * Component rows are laid out as a table rather than free-flowing text, because
+ * the useful reading is a vertical scan of the status column.
  */
 
 const STATE_BY_STATUS = {
@@ -24,6 +27,12 @@ const ICON_BY_STATUS = {
   healthy: CircleCheck,
   degraded: CircleAlert,
   unhealthy: CircleSlash,
+} as const;
+
+const TONE_BY_STATUS = {
+  healthy: "text-state-active",
+  degraded: "text-state-waiting",
+  unhealthy: "text-state-blocked",
 } as const;
 
 async function loadHealth(): Promise<HealthReport | { unreachable: true }> {
@@ -40,21 +49,21 @@ export async function SystemStatus() {
 
   if ("unreachable" in health) {
     return (
-      <Card>
-        <CardHeader>
+      <Card state="blocked">
+        <CardHeader className="flex-row items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <Activity className="size-4 text-content-subtle" aria-hidden="true" />
             Engineering platform
           </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
           <StatusBadge state="blocked">API unreachable</StatusBadge>
-          <p className="text-sm text-content-muted">
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm leading-relaxed text-content-muted">
             The workspace could not reach the Victorious API. Start it with{" "}
-            <code className="rounded bg-surface-raised px-1.5 py-0.5 font-mono text-xs text-content">
+            <code className="rounded bg-canvas-deep px-1.5 py-0.5 font-mono text-xs text-content">
               uvicorn app.main:app --reload
             </code>{" "}
-            from <span className="font-mono text-xs">apps/api</span>.
+            from <span className="font-mono text-xs text-content">apps/api</span>.
           </p>
         </CardContent>
       </Card>
@@ -68,7 +77,10 @@ export async function SystemStatus() {
           <Activity className="size-4 text-content-subtle" aria-hidden="true" />
           Engineering platform
         </CardTitle>
-        <StatusBadge state={STATE_BY_STATUS[health.status]} pulse={health.status === "healthy"}>
+        <StatusBadge
+          state={STATE_BY_STATUS[health.status]}
+          pulse={health.status === "healthy"}
+        >
           {health.status}
         </StatusBadge>
       </CardHeader>
@@ -77,29 +89,38 @@ export async function SystemStatus() {
         <dl className="flex gap-6 text-xs">
           <div>
             <dt className="text-content-subtle">Version</dt>
-            <dd className="font-mono text-content">{health.version}</dd>
+            <dd className="mt-0.5 font-mono text-content">{health.version}</dd>
           </div>
           <div>
             <dt className="text-content-subtle">Environment</dt>
-            <dd className="font-mono text-content">{health.environment}</dd>
+            <dd className="mt-0.5 font-mono text-content">{health.environment}</dd>
+          </div>
+          <div>
+            <dt className="text-content-subtle">Components</dt>
+            <dd className="mt-0.5 font-mono text-content">{health.components.length}</dd>
           </div>
         </dl>
 
-        <ul className="divide-y divide-border border-t border-border">
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-canvas/40">
           {health.components.map((component) => {
             const ComponentIcon = ICON_BY_STATUS[component.status];
             return (
-              <li key={component.name} className="flex items-center gap-3 py-2.5">
+              <li
+                key={component.name}
+                className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-surface-raised/50"
+              >
                 <ComponentIcon
-                  className="size-3.5 shrink-0 text-content-subtle"
+                  className={`size-3.5 shrink-0 ${TONE_BY_STATUS[component.status]}`}
                   aria-hidden="true"
                 />
-                <span className="font-mono text-xs text-content">{component.name}</span>
+                <span className="shrink-0 font-mono text-xs text-content">
+                  {component.name}
+                </span>
                 <span className="flex-1 truncate text-xs text-content-muted">
                   {component.message}
                 </span>
                 {component.latency_ms !== null && (
-                  <span className="font-mono text-xs tabular-nums text-content-subtle">
+                  <span className="shrink-0 font-mono text-xs text-content-subtle">
                     {component.latency_ms.toFixed(1)}ms
                   </span>
                 )}
@@ -109,8 +130,8 @@ export async function SystemStatus() {
         </ul>
 
         <p className="sr-only">
-          Overall platform status is {health.status} with {health.components.length} components
-          reporting.
+          Overall platform status is {health.status} with {health.components.length}{" "}
+          components reporting.
         </p>
       </CardContent>
     </Card>

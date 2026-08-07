@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, Play } from "lucide-react";
+import { CircleAlert, Loader2, Play } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { ApiError, ApiUnreachableError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 /**
  * Asks the organization to make progress.
@@ -14,6 +16,10 @@ import { ApiError, ApiUnreachableError } from "@/lib/api-client";
  * conflict, or completion. The button reports what actually happened rather than
  * simply refreshing: `10_UI_UX_Plan.md` requires users to always understand what
  * is happening and what comes next.
+ *
+ * While running, the button keeps its width and grows a travelling light along
+ * its base. A control that resizes mid-action shifts the header around it, and
+ * this one lives in a sticky header where that would be especially jarring.
  */
 export function AdvanceButton({ projectId }: { projectId: string }) {
   const router = useRouter();
@@ -54,28 +60,43 @@ export function AdvanceButton({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="space-y-2">
-      <button
+    <div className="flex min-w-0 flex-col items-end gap-1.5">
+      <Button
         type="button"
         onClick={advance}
         disabled={running}
-        className="inline-flex items-center gap-2 rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-canvas transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+        size="md"
+        className="relative min-w-[13.5rem] overflow-hidden disabled:opacity-100"
+        aria-live="off"
       >
         {running ? (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          <Loader2 className="animate-spin" aria-hidden="true" />
         ) : (
-          <Play className="size-4" aria-hidden="true" />
+          <Play aria-hidden="true" />
         )}
         {running ? "Organization working…" : "Advance engineering"}
-      </button>
+
+        {running && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 overflow-hidden"
+          >
+            <span className="block h-full w-1/3 animate-[sweep_1.4s_var(--ease-out-quint)_infinite] bg-canvas/50" />
+          </span>
+        )}
+      </Button>
 
       {outcome && (
         <p
           role="status"
-          className={
-            failed ? "text-xs text-state-blocked" : "text-xs text-content-muted"
-          }
+          className={cn(
+            "flex max-w-xs animate-[fade-in_0.25s_ease-out_both] items-start gap-1.5 text-right text-xs leading-relaxed",
+            failed ? "text-state-blocked" : "text-content-muted",
+          )}
         >
+          {failed && (
+            <CircleAlert className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
+          )}
           {outcome}
         </p>
       )}

@@ -1,4 +1,5 @@
 import { ArtifactList } from "@/components/artifact-list";
+import { PageHeader } from "@/components/ui/page-header";
 import { api, type LifecycleStage } from "@/lib/api";
 
 /**
@@ -27,11 +28,20 @@ export async function SectionPage({
   const artifacts = results.flat();
 
   return (
-    <div className="space-y-4">
-      <header className="space-y-1">
-        <h2 className="text-sm font-medium tracking-tight">{title}</h2>
-        <p className="text-sm text-content-muted">{description}</p>
-      </header>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Section"
+        title={title}
+        description={description}
+        actions={
+          artifacts.length > 0 ? (
+            <span className="rounded-full border border-border bg-surface-raised px-2.5 py-1 font-mono text-[11px] text-content-subtle">
+              {artifacts.length} artifact{artifacts.length === 1 ? "" : "s"}
+            </span>
+          ) : undefined
+        }
+        className="animate-[rise_0.4s_var(--ease-out-quint)_both]"
+      />
 
       <ArtifactList projectId={projectId} artifacts={artifacts} empty={empty} />
     </div>
