@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen antialiased">
         {/*
-          The workspace nav has eleven links on every project page. Without a way
+          The workspace nav has twelve links on every project page. Without a way
           past it, a keyboard or screen-reader user tabs through all of them
           before reaching content on every navigation. `10_UI_UX_Plan.md` treats
           accessibility as a core requirement rather than an enhancement.

@@ -14,6 +14,7 @@ import {
   Library,
   ScrollText,
   ShieldCheck,
+  Wand2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,7 +27,7 @@ import { cn } from "@/lib/utils";
  * development", and every artifact must be reachable "within two or three
  * interactions". Every section of the project is one click from every other.
  *
- * With eleven destinations, an icon per tab is what makes the row scannable
+ * With twelve destinations, an icon per tab is what makes the row scannable
  * without reading it — the shape becomes the landmark on repeat visits. The icon
  * never carries meaning alone: the text label is always present.
  */
@@ -47,6 +48,7 @@ const SECTIONS: ReadonlyArray<{
   { segment: "traceability", label: "Traceability", icon: GitBranch },
   { segment: "review", label: "Helix Review", icon: ShieldCheck },
   { segment: "approvals", label: "Approvals", icon: ClipboardCheck },
+  { segment: "generated-ui", label: "AI Generated UI", icon: Wand2 },
 ];
 
 export function WorkspaceNav({
