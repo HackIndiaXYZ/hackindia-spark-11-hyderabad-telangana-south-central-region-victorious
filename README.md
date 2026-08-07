@@ -54,6 +54,23 @@ cd apps/web && npm run dev                                   # http://localhost:
 Cold start from an empty database to a fully populated workspace: **18 seconds**.
 The presentation walkthrough is [`DEMO.md`](DEMO.md).
 
+**Every artifact is reviewed as it lands.** The **Helix Review** tab scores all
+22 — overall **90/100**, per specialist from 86 to 92, with specific
+recommendations ("add a uniqueness constraint on (doctor, slot) to enforce
+FR-02"). Most of each score is *measured*: five deterministic checks over the
+artifact and its trace edges carry the full 100 points, and a reasoning pass may
+move the result by at most **±12**, in writing. So a model can sharpen a
+judgement but cannot overturn a fact — and scores genuinely differ, spanning
+**81–100 across eleven distinct values** rather than the flat number a purely
+generative reviewer would produce on recorded fixtures. Every finding is labelled
+`check` or `reasoning`, because only one of the two is reproducible.
+
+The reviewer runs **natively**, on the same provider abstraction the specialists
+use. Helix — Mutagent's ADL conductor — specs and evaluates it at development
+time and stays out of the request path, as
+[`07_System_Architecture.md`](docs/07_System_Architecture.md) requires. See
+[ADR-0013](docs/adr/0013-engineering-review-layer.md).
+
 **Not yet implemented: authentication.** `09_MVP_Roadmap.md` lists it as
 Priority 1 and it is not built — the API is currently unauthenticated. See
 [Known gaps](#known-gaps).
@@ -181,6 +198,7 @@ apps/
       events/     Event bus (durable append + live fan-out)
       llm/        Provider abstraction: Anthropic, Gemini, fixture replay
       agents/     The eight engineering agents, their contracts and prompts
+      review/     Engineering review: deterministic checks + bounded reasoning
       orchestration/  Executive AI, workflow graph, dependency & conflict rules
       api/        HTTP transport only
     tests/
@@ -190,6 +208,8 @@ evaluation/       Mutagent ADL artifacts (Milestone 9)
 ```
 
 Dependencies point inward: `api → orchestration → agents → memory → domain`.
+`review` is a sibling of `agents`, not a layer above it — it may not import the
+API or orchestration, and `tests/test_architecture.py` enforces that.
 
 **Database migrations** — from `apps/api`:
 
@@ -274,3 +294,23 @@ Diagnosis, Optimization.
 Project Victorious is the system being developed. It is not another Mutagent, and
 it does not reimplement Helix. Mutagent develops AI systems; Victorious develops
 software products. Mutagent is not part of the runtime.
+
+That boundary was tested directly when the **Helix** package was installed into
+this repository. The tempting integration — have Helix review each artifact at
+runtime — is not possible and not permitted: Helix ships no importable code (zero
+`.py` files, every package `"private": true`, no server or daemon; its
+orchestrator is a markdown agent definition adopted by a coding agent), and
+`07_System_Architecture.md` places Mutagent outside the execution path either
+way.
+
+So the **engineering review layer** (`apps/api/app/review/`) is first-party, built
+on the same `LLMProvider` abstraction as the specialists, and
+`tests/test_architecture.py` enforces its boundaries with the rest. Helix keeps
+the role the documentation gives it: at development time it specs, evaluates, and
+optimizes that reviewer. Full reasoning in
+[ADR-0013](docs/adr/0013-engineering-review-layer.md).
+
+The Helix installation itself (`.claude/`, `.agents/`, `.codex/`) is
+developer-local tooling installed through the Mutagent CLI and is not committed
+here — it is third-party, partly proprietary, and not a dependency of anything
+Victorious runs.

@@ -1,0 +1,21 @@
+{
+  "value": {
+    "summary": "Requirements are specific and prioritised; access control is named but not defined.",
+    "score_adjustment": 2,
+    "strengths": [
+      "FR-02 states the double-booking rejection explicitly \u2014 the case most likely to be implemented wrongly.",
+      "Every requirement carries a rationale, so a later reader can tell why it exists.",
+      "`out_of_scope` names insurance claims, which makes the MVP boundary checkable."
+    ],
+    "weaknesses": [
+      "NFR-01 requires confidentiality but names no roles or permission model, so two engineers would implement it differently."
+    ],
+    "suggestions": [
+      "Define the role set on NFR-01 before the architect designs authorisation from it."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

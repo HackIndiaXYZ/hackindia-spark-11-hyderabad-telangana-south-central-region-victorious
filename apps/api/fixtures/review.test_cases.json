@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "TC-01 is implementable as written and traced to its criterion.",
+    "score_adjustment": 0,
+    "strengths": [
+      "Given/when/then is concrete enough to implement without asking a question."
+    ],
+    "weaknesses": [
+      "Only one case, so most of the requirement set is unexercised."
+    ],
+    "suggestions": [
+      "Add cases for invalid input and unauthorised access."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

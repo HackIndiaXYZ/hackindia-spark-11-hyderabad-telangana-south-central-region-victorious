@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Realises the approved model; no validation or error handling.",
+    "score_adjustment": -3,
+    "strengths": [
+      "Field types match the approved schema."
+    ],
+    "weaknesses": [
+      "No validation on the fields NFR-01 implies should be constrained."
+    ],
+    "suggestions": [
+      "Add field validation and a docstring naming the requirement it serves."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

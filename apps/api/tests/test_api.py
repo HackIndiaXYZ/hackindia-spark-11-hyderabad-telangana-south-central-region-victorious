@@ -347,3 +347,125 @@ async def test_openapi_documents_the_workspace_surface(api: AsyncClient) -> None
     assert f"{PREFIX}/projects/{{project_id}}/advance" in paths
     assert f"{PREFIX}/projects/{{project_id}}/traceability" in paths
     assert f"{PREFIX}/approvals/{{approval_id}}/decision" in paths
+
+
+# --- Helix Review -------------------------------------------------------------
+
+
+async def test_every_produced_artifact_is_reviewed_as_it_lands(api: AsyncClient) -> None:
+    """Review is automatic. Nothing in the workflow asks for it."""
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    artifacts = (await api.get(f"{PREFIX}/projects/{project_id}/artifacts")).json()
+    summary = (await api.get(f"{PREFIX}/projects/{project_id}/reviews")).json()
+
+    assert summary["artifacts_reviewed"] == len(artifacts)
+    assert 0 < summary["overall_score"] <= 100
+
+
+async def test_review_summary_scores_each_specialist(api: AsyncClient) -> None:
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    summary = (await api.get(f"{PREFIX}/projects/{project_id}/reviews")).json()
+
+    assert summary["by_role"]
+    for role in summary["by_role"]:
+        assert role["artifacts_reviewed"] >= 1
+        assert 0 <= role["average_score"] <= 100
+        assert role["lowest_score"] <= role["average_score"]
+
+
+async def test_scores_are_not_uniform_across_artifacts(api: AsyncClient) -> None:
+    """A reviewer that scores everything alike has measured nothing."""
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    summary = (await api.get(f"{PREFIX}/projects/{project_id}/reviews")).json()
+    scores = {review["quality_score"] for review in summary["reviews"]}
+
+    assert len(scores) > 1
+
+
+async def test_every_review_carries_evidence_from_the_checks(api: AsyncClient) -> None:
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    summary = (await api.get(f"{PREFIX}/projects/{project_id}/reviews")).json()
+
+    for review in summary["reviews"]:
+        findings = review["strengths"] + review["weaknesses"] + review["suggestions"]
+        assert any(finding["source"] == "check" for finding in findings)
+        assert 0 <= review["deterministic_score"] <= 100
+
+
+async def test_a_review_travels_with_its_artifact(api: AsyncClient) -> None:
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    artifacts = (await api.get(f"{PREFIX}/projects/{project_id}/artifacts")).json()
+    prd = next(item for item in artifacts if item["type"] == "prd")
+
+    detail = (
+        await api.get(f"{PREFIX}/projects/{project_id}/artifacts/{prd['id']}")
+    ).json()
+
+    assert detail["review"] is not None
+    assert detail["review"]["artifact_version"] == detail["version"]
+    assert detail["review"]["artifact_id"] == prd["id"]
+
+
+async def test_a_human_revision_is_not_passed_off_as_reviewed(api: AsyncClient) -> None:
+    """Reviews are per version. A version no agent produced has none."""
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    artifacts = (await api.get(f"{PREFIX}/projects/{project_id}/artifacts")).json()
+    prd = next(item for item in artifacts if item["type"] == "prd")
+
+    await api.post(
+        f"{PREFIX}/projects/{project_id}/artifacts/{prd['id']}/revise",
+        json={"body_markdown": "# Requirements\n\nRewritten by hand.", "summary": "Human edit"},
+    )
+
+    detail = (
+        await api.get(f"{PREFIX}/projects/{project_id}/artifacts/{prd['id']}")
+    ).json()
+    assert detail["version"] == 2
+    assert detail["review"] is None
+
+    # The agent's review of v1 is still readable exactly as it was written.
+    original = (
+        await api.get(f"{PREFIX}/projects/{project_id}/artifacts/{prd['id']}?version=1")
+    ).json()
+    assert original["review"]["artifact_version"] == 1
+
+
+async def test_reviews_for_a_project_with_no_work_are_empty_but_well_formed(
+    api: AsyncClient,
+) -> None:
+    project_id = await create_project(api)
+
+    summary = (await api.get(f"{PREFIX}/projects/{project_id}/reviews")).json()
+
+    assert summary["artifacts_reviewed"] == 0
+    assert summary["overall_score"] == 0
+    assert summary["by_role"] == []
+    assert summary["reviews"] == []
+
+
+async def test_recommendations_are_specific_and_never_repeat(api: AsyncClient) -> None:
+    """A template sentence three times reads as noise, not emphasis."""
+    project_id = await create_project(api)
+    await api.post(f"{PREFIX}/projects/{project_id}/advance")
+
+    summary = (await api.get(f"{PREFIX}/projects/{project_id}/reviews")).json()
+    texts = [item["text"] for item in summary["recommendations"]]
+
+    assert texts
+    assert len(texts) == len(set(texts))
+    # Specific before generic: the model's suggestions name something in the
+    # artifact, the checks' suggestions are templates.
+    sources = [item["source"] for item in summary["recommendations"]]
+    assert sources == sorted(sources, key=lambda source: source != "reasoning")

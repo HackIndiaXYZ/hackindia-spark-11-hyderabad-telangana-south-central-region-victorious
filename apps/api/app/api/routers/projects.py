@@ -23,6 +23,7 @@ from app.api.schemas import (
     EventView,
     ImpactPreview,
     ProjectDetail,
+    ProjectReviewSummary,
     ProjectSummary,
     ReviseArtifactRequest,
     TraceGraph,
@@ -161,6 +162,23 @@ async def list_events(
 ) -> list[EventView]:
     """Activity oldest first. ``after`` resumes from a known event id."""
     return await views.list_events(memory, project_id, limit=limit, after_id=after)
+
+
+@router.get(
+    "/{project_id}/reviews",
+    response_model=ProjectReviewSummary,
+    summary="Helix Review — engineering quality of every artifact",
+)
+async def get_reviews(project_id: str, memory: MemoryDep) -> ProjectReviewSummary:
+    """Overall score, per-specialist scores, recommendations, and full history.
+
+    Reviews come from the organization's own review layer. Helix — Mutagent's ADL
+    conductor — specifies and evaluates that reviewer at development time, and is
+    deliberately absent from this request path: `07_System_Architecture.md` keeps
+    Mutagent outside the runtime execution path.
+    """
+    summary: ProjectReviewSummary = await views.project_reviews(memory, project_id)
+    return summary
 
 
 @router.get(

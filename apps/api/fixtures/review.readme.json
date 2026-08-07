@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Accurate about the scaffold; light on how to run it.",
+    "score_adjustment": 0,
+    "strengths": [
+      "States plainly that this is a scaffold, consistent with the engineer's own notes."
+    ],
+    "weaknesses": [
+      "No concrete setup commands, so a new reader cannot get started."
+    ],
+    "suggestions": [
+      "Add the exact commands to install dependencies and start the service."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

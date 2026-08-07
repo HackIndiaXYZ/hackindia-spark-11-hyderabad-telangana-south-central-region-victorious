@@ -93,6 +93,40 @@ class VectorStoreSettings(BaseModel):
     collection: str = Field(default="victorious_memory")
 
 
+class ReviewSettings(BaseModel):
+    """Engineering review configuration.
+
+    Reviewing is on by default because a score on every artifact is the point;
+    *blocking* on that score is off by default because a review that halts the
+    workflow is a new way for a live demonstration to stall. Turn it on
+    deliberately (`VICTORIOUS_REVIEW__BLOCKING=true`) to show the gate.
+    """
+
+    enabled: bool = Field(
+        default=True, description="Review each artifact as it is produced."
+    )
+    use_reasoning: bool = Field(
+        default=True,
+        description=(
+            "Let a model contribute prose and a bounded score adjustment. When "
+            "false, reviews are purely structural and say so."
+        ),
+    )
+    blocking: bool = Field(
+        default=False,
+        description=(
+            "Whether the Executive AI halts a stage whose upstream reviews fall "
+            "below `revision_threshold`. Advisory when false."
+        ),
+    )
+    revision_threshold: int = Field(
+        default=60, ge=0, le=100, description="Below this, the verdict is needs_revision."
+    )
+    strong_threshold: int = Field(
+        default=85, ge=0, le=100, description="At or above this, the verdict is approved."
+    )
+
+
 class ObservabilitySettings(BaseModel):
     """Logging and diagnostics configuration."""
 
@@ -128,6 +162,7 @@ class Settings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
+    review: ReviewSettings = Field(default_factory=ReviewSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
 
     @field_validator("cors_origins", mode="before")

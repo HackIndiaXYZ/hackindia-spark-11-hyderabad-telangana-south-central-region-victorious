@@ -28,6 +28,7 @@ from app.memory.repository import SharedMemory
 from app.memory.sql_repository import SqlSharedMemory
 from app.orchestration.dispatcher import AgentDispatcher, RegistryDispatcher
 from app.orchestration.runner import OrchestrationRunner
+from app.review.reviewer import EngineeringReviewer
 
 logger = get_logger(__name__)
 
@@ -103,8 +104,17 @@ def build_container(settings: Settings) -> Container:
     context_builder = container.resolve(ContextBuilder)
     events = container.resolve(EventBus)
 
+    # The reviewer shares the organization's provider, so it runs on recorded
+    # fixtures offline exactly as the agents do. Disabling review yields None,
+    # and every agent then behaves as it did before the layer existed.
+    reviewer = (
+        EngineeringReviewer(provider, settings.review) if settings.review.enabled else None
+    )
+    if reviewer is not None:
+        container.register_instance(EngineeringReviewer, reviewer)
+
     dispatcher = RegistryDispatcher()
-    for agent in build_organization(memory, provider, context_builder, events):
+    for agent in build_organization(memory, provider, context_builder, events, reviewer):
         # Registration validates the agent's role against the domain's owner for
         # its stage, so a mis-wired organization fails at startup rather than
         # producing artifacts attributed to the wrong specialist.
@@ -118,7 +128,7 @@ def build_container(settings: Settings) -> Container:
 
     container.register_singleton(
         OrchestrationRunner,
-        lambda: OrchestrationRunner(memory, provider, events, dispatcher),
+        lambda: OrchestrationRunner(memory, provider, events, dispatcher, settings.review),
     )
 
     # --- Health --------------------------------------------------------------

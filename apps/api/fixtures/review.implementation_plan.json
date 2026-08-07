@@ -1,0 +1,20 @@
+{
+  "value": {
+    "summary": "Sequenced by risk \u2014 the schema first, the conflict logic second.",
+    "score_adjustment": 3,
+    "strengths": [
+      "T-02 tackles booking conflicts early rather than deferring the least certain work.",
+      "Dependencies are real and acyclic."
+    ],
+    "weaknesses": [
+      "No task covers the FR-01 endpoint the API contract also omits."
+    ],
+    "suggestions": [
+      "Add a task for patient registration so the gap does not reach implementation."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

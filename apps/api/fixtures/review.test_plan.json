@@ -1,0 +1,16 @@
+{
+  "value": {
+    "summary": "Correctly targets the highest-risk behaviour first.",
+    "score_adjustment": 2,
+    "strengths": [
+      "The strategy names booking conflicts as the priority, matching where the design is least certain.",
+      "The scaffold defect it reports \u2014 no FR-01 endpoint \u2014 is real and verifiable."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

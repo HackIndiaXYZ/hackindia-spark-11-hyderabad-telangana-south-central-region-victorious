@@ -1,0 +1,20 @@
+{
+  "value": {
+    "summary": "Entities and relationships are sound; indexing and retention are unaddressed.",
+    "score_adjustment": -2,
+    "strengths": [
+      "The patient-to-appointment relationship is stated explicitly."
+    ],
+    "weaknesses": [
+      "No index is defined for the slot lookup the booking conflict check depends on.",
+      "Nothing addresses retention for clinical data despite the regulatory risk on the register."
+    ],
+    "suggestions": [
+      "Add a uniqueness constraint on (doctor, slot) to enforce FR-02 in the schema."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

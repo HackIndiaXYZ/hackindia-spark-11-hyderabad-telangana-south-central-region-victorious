@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
 
+from review_fixtures import REVIEW_JUDGEMENTS  # noqa: E402
 from test_organization import PAYLOADS  # noqa: E402
 
 from app.llm.fixture_provider import UPSTREAM_TOKEN  # noqa: E402
@@ -122,6 +123,15 @@ def main() -> int:
         _write(
             f"{key}.json",
             {"value": value, "usage": {"input_tokens": 2400, "output_tokens": 1800}},
+        )
+        written += 1
+
+    # One recorded judgement per artifact type, so the review layer produces real
+    # prose and a real score spread offline (ADR-0008).
+    for artifact_type, judgement in REVIEW_JUDGEMENTS.items():
+        _write(
+            f"review.{artifact_type}.json",
+            {"value": judgement, "usage": {"input_tokens": 1500, "output_tokens": 320}},
         )
         written += 1
 

@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Derived from the approved contract; inherits its gaps.",
+    "score_adjustment": -2,
+    "strengths": [
+      "Documents the endpoint that exists rather than one that does not."
+    ],
+    "weaknesses": [
+      "No error responses documented, so a client cannot handle the conflict path."
+    ],
+    "suggestions": [
+      "Document status codes, including the 409 the booking conflict produces."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

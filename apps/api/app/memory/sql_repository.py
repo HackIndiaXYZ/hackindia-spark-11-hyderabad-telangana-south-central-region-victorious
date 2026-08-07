@@ -23,6 +23,7 @@ from app.core.logging import get_logger
 from app.db.models import (
     AgentRunRow,
     ApprovalRow,
+    ArtifactReviewRow,
     ArtifactRow,
     ArtifactVersionRow,
     EventRow,
@@ -43,6 +44,7 @@ from app.domain.errors import ConflictError, NotFoundError
 from app.domain.events import EventType, ProjectEvent
 from app.domain.lifecycle import AgentRole, LifecycleStage
 from app.domain.projects import Project, StageState
+from app.domain.reviews import ArtifactReview, ReviewFinding, ReviewVerdict
 from app.domain.traceability import (
     ImpactAnalysis,
     StaleEdge,
@@ -159,6 +161,29 @@ def _to_approval(row: ApprovalRow) -> ApprovalRequest:
         status=ApprovalStatus(row.status),
         feedback=row.feedback,
         decided_at=row.decided_at,
+        created_at=row.created_at,
+    )
+
+
+def _to_review(row: ArtifactReviewRow) -> ArtifactReview:
+    return ArtifactReview(
+        id=row.id,
+        project_id=row.project_id,
+        artifact_id=row.artifact_id,
+        artifact_version=row.artifact_version,
+        stage=LifecycleStage(row.stage),
+        role=AgentRole(row.role),
+        produced_by_run_id=row.produced_by_run_id,
+        quality_score=row.quality_score,
+        verdict=ReviewVerdict(row.verdict),
+        summary=row.summary,
+        strengths=[ReviewFinding.model_validate(item) for item in row.strengths],
+        weaknesses=[ReviewFinding.model_validate(item) for item in row.weaknesses],
+        suggestions=[ReviewFinding.model_validate(item) for item in row.suggestions],
+        deterministic_score=row.deterministic_score,
+        reasoning_applied=row.reasoning_applied,
+        reviewer_provider=row.reviewer_provider,
+        reviewer_model=row.reviewer_model,
         created_at=row.created_at,
     )
 
@@ -698,6 +723,76 @@ class SqlEventRepository(_Base):
             return [_to_event(row) for row in reversed(rows)]
 
 
+class SqlReviewRepository(_Base):
+    async def upsert(self, review: ArtifactReview) -> ArtifactReview:
+        async with self._db.session() as session:
+            result = await session.execute(
+                select(ArtifactReviewRow).where(
+                    ArtifactReviewRow.artifact_id == review.artifact_id,
+                    ArtifactReviewRow.artifact_version == review.artifact_version,
+                )
+            )
+            row = result.scalar_one_or_none()
+
+            payload = {
+                "quality_score": review.quality_score,
+                "verdict": review.verdict.value,
+                "summary": review.summary,
+                "strengths": [item.model_dump(mode="json") for item in review.strengths],
+                "weaknesses": [item.model_dump(mode="json") for item in review.weaknesses],
+                "suggestions": [item.model_dump(mode="json") for item in review.suggestions],
+                "deterministic_score": review.deterministic_score,
+                "reasoning_applied": review.reasoning_applied,
+                "reviewer_provider": review.reviewer_provider,
+                "reviewer_model": review.reviewer_model,
+            }
+
+            if row is None:
+                session.add(
+                    ArtifactReviewRow(
+                        id=review.id,
+                        project_id=review.project_id,
+                        artifact_id=review.artifact_id,
+                        artifact_version=review.artifact_version,
+                        stage=review.stage.value,
+                        role=review.role.value,
+                        produced_by_run_id=review.produced_by_run_id,
+                        created_at=review.created_at,
+                        **payload,
+                    )
+                )
+            else:
+                for key, value in payload.items():
+                    setattr(row, key, value)
+
+        return review
+
+    async def list_for_project(self, project_id: str) -> list[ArtifactReview]:
+        async with self._db.session() as session:
+            result = await session.execute(
+                select(ArtifactReviewRow)
+                .where(ArtifactReviewRow.project_id == project_id)
+                .order_by(ArtifactReviewRow.created_at)
+            )
+            return [_to_review(row) for row in result.scalars()]
+
+    async def for_artifact(
+        self, artifact_id: str, version: int | None = None
+    ) -> ArtifactReview | None:
+        async with self._db.session() as session:
+            query = select(ArtifactReviewRow).where(
+                ArtifactReviewRow.artifact_id == artifact_id
+            )
+            if version is not None:
+                query = query.where(ArtifactReviewRow.artifact_version == version)
+
+            result = await session.execute(
+                query.order_by(ArtifactReviewRow.artifact_version.desc()).limit(1)
+            )
+            row = result.scalar_one_or_none()
+            return _to_review(row) if row else None
+
+
 class SqlSharedMemory:
     """Composes every repository into the single memory collaborator.
 
@@ -712,6 +807,7 @@ class SqlSharedMemory:
         self._runs = SqlAgentRunRepository(database)
         self._approvals = SqlApprovalRepository(database)
         self._events = SqlEventRepository(database)
+        self._reviews = SqlReviewRepository(database)
 
     @property
     def projects(self) -> SqlProjectRepository:
@@ -736,3 +832,7 @@ class SqlSharedMemory:
     @property
     def events(self) -> SqlEventRepository:
         return self._events
+
+    @property
+    def reviews(self) -> SqlReviewRepository:
+        return self._reviews

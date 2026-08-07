@@ -1,0 +1,20 @@
+{
+  "value": {
+    "summary": "Correct HTTP semantics; the requirement set is only partly served.",
+    "score_adjustment": -4,
+    "strengths": [
+      "POST /api/v1/appointments uses the right verb and links to FR-02."
+    ],
+    "weaknesses": [
+      "No endpoint serves FR-01, so patient registration is unreachable through the API.",
+      "No error responses are described for the conflict path FR-02 requires."
+    ],
+    "suggestions": [
+      "Add the patient registration endpoint and document the 409 conflict response."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

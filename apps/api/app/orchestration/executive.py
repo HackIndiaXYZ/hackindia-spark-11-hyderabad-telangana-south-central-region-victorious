@@ -38,6 +38,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from app.core.config import ReviewSettings
 from app.core.logging import get_correlation_id, get_logger
 from app.domain.agents import AgentMessage, AgentRun, AgentRunStatus
 from app.domain.approvals import ApprovalKind, ApprovalRequest, ApprovalStatus
@@ -58,6 +59,7 @@ from app.llm.provider import CompletionRequest, LLMProvider, Message, Role
 from app.memory.repository import SharedMemory
 from app.orchestration.conflicts import Conflict, ConflictKind, blocking, detect_conflicts
 from app.orchestration.dependencies import (
+    STAGE_INPUTS,
     ProjectSnapshot,
     Readiness,
     ReadinessStatus,
@@ -136,10 +138,14 @@ class ExecutiveAI:
         memory: SharedMemory,
         provider: LLMProvider,
         events: EventBus,
+        review: ReviewSettings | None = None,
     ) -> None:
         self._memory = memory
         self._provider = provider
         self._events = events
+        # Defaulted so an Executive can be constructed without review settings and
+        # behaves exactly as it did before the review layer existed.
+        self._review = review or ReviewSettings()
 
     @property
     def title(self) -> str:
@@ -209,6 +215,34 @@ class ExecutiveAI:
                 if outstanding:
                     return self._conflict_decision(next_stage, outstanding, conflicts)
 
+                # The Executive consults the engineering review before committing
+                # a specialist to build on upstream work. Advisory by default:
+                # `13_Demo_and_Pitch.md` favours a demonstration that runs, and a
+                # quality score is a signal to weigh, not an authority to obey.
+                # `VICTORIOUS_REVIEW__BLOCKING=true` promotes it to a gate.
+                if failing := await self._failing_reviews(project_id, next_stage, snapshot):
+                    if self._review.blocking:
+                        return CoordinationDecision(
+                            action=CoordinationAction.HALT_BLOCKED,
+                            stage=next_stage,
+                            role=role,
+                            readiness=readiness,
+                            conflicts=conflicts,
+                            rationale=(
+                                f"{len(failing)} upstream artifact(s) scored below "
+                                f"{self._review.revision_threshold} in engineering "
+                                f"review: {failing[0]}"
+                            ),
+                        )
+                    logger.info(
+                        "Advancing despite low review scores (advisory mode)",
+                        extra={
+                            "project_id": project_id,
+                            "stage": next_stage.value,
+                            "below_threshold": len(failing),
+                        },
+                    )
+
                 return CoordinationDecision(
                     action=CoordinationAction.EXECUTE_STAGE,
                     stage=next_stage,
@@ -265,6 +299,33 @@ class ExecutiveAI:
             current_versions=versions,
             runs=runs,
         )
+
+    async def _failing_reviews(
+        self, project_id: str, stage: LifecycleStage, snapshot: ProjectSnapshot
+    ) -> list[str]:
+        """Upstream artifacts this stage consumes that failed engineering review.
+
+        Scoped to the stage's *inputs* rather than the whole project: the question
+        is whether it is safe to build on what this stage is about to read, not
+        whether every artifact anywhere is sound. A weak deployment plan should
+        not block architecture.
+        """
+        required = STAGE_INPUTS.get(stage, frozenset())
+        if not required:
+            return []
+
+        failing: list[str] = []
+        for artifact in snapshot.artifacts:
+            if artifact.type not in required or not artifact.has_content:
+                continue
+
+            review = await self._memory.reviews.for_artifact(
+                artifact.id, artifact.current_version
+            )
+            if review is not None and review.quality_score < self._review.revision_threshold:
+                failing.append(f"{artifact.title} ({review.quality_score}/100)")
+
+        return failing
 
     @staticmethod
     def _outstanding(

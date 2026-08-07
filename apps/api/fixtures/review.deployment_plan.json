@@ -1,0 +1,17 @@
+{
+  "value": {
+    "summary": "Names what blocks production instead of implying readiness.",
+    "score_adjustment": 5,
+    "strengths": [
+      "`outstanding` names missing authentication and the FR-01 gap as real release blockers.",
+      "Environment variables are listed by name and purpose with no values.",
+      "The rollback note distinguishes what a redeploy cannot undo."
+    ],
+    "weaknesses": [],
+    "suggestions": []
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

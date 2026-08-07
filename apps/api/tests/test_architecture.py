@@ -26,6 +26,10 @@ _FORBIDDEN_IMPORTS: dict[str, tuple[str, ...]] = {
     "db": ("app.api", "app.memory", "app.llm", "app.agents", "app.orchestration",
            "app.events"),
     "memory": ("app.api", "app.agents", "app.orchestration"),
+    # The review layer is a sibling of agents, not a consumer of them, and must
+    # never reach for Mutagent: 07_System_Architecture.md places it outside the
+    # runtime execution path.
+    "review": ("app.api", "app.agents", "app.orchestration"),
     "events": ("app.api", "app.agents", "app.orchestration", "app.llm"),
     "llm": ("app.api", "app.agents", "app.orchestration", "app.memory"),
     "agents": ("app.api", "app.orchestration"),

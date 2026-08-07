@@ -38,6 +38,7 @@ const MEANINGFUL = new Set([
   "agent_failed",
   "artifact_created",
   "artifact_revised",
+  "artifact_reviewed",
   "artifact_approved",
   "artifact_marked_stale",
   "approval_requested",

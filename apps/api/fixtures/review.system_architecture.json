@@ -1,0 +1,20 @@
+{
+  "value": {
+    "summary": "The modular-monolith choice is argued from the requirements rather than assumed.",
+    "score_adjustment": 5,
+    "strengths": [
+      "The style rationale reasons from team size and coupling instead of reaching for microservices.",
+      "Every component links to the requirement it serves, so nothing exists without a reason."
+    ],
+    "weaknesses": [
+      "Authorisation is listed as a security note but no component owns it, leaving NFR-01 unassigned."
+    ],
+    "suggestions": [
+      "Assign authorisation to a component or state that it is cross-cutting middleware."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

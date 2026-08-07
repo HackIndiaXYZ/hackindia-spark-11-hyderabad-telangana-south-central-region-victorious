@@ -1,0 +1,19 @@
+{
+  "value": {
+    "summary": "Covers setup; thin on the gotchas that matter most.",
+    "score_adjustment": -3,
+    "strengths": [
+      "Names the migration ordering requirement."
+    ],
+    "weaknesses": [
+      "No gotchas beyond migrations, and gotchas are the highest-value content in this document."
+    ],
+    "suggestions": [
+      "Document the booking conflict semantics, which are easy to implement wrongly."
+    ]
+  },
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 320
+  }
+}

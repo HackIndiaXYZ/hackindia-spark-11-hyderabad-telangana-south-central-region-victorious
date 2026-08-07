@@ -23,6 +23,7 @@ const SECTIONS = [
   { segment: "documentation", label: "Documentation" },
   { segment: "knowledge", label: "Knowledge Base" },
   { segment: "traceability", label: "Traceability" },
+  { segment: "review", label: "Helix Review" },
   { segment: "approvals", label: "Approvals" },
 ] as const;
 

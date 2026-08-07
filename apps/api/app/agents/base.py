@@ -45,6 +45,7 @@ from app.llm.provider import (
 )
 from app.memory.context_builder import ContextBuilder, ProjectContext
 from app.memory.repository import SharedMemory
+from app.review.reviewer import EngineeringReviewer
 
 logger = get_logger(__name__)
 
@@ -77,11 +78,17 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         provider: LLMProvider,
         context_builder: ContextBuilder,
         events: EventBus,
+        reviewer: EngineeringReviewer | None = None,
     ) -> None:
         self._memory = memory
         self._provider = provider
         self._context = context_builder
         self._events = events
+        # Optional so an agent can be constructed without one. Reviewing is a
+        # quality signal layered on top of production, never a precondition for
+        # it, and an agent with no reviewer behaves exactly as it did before the
+        # layer existed.
+        self._reviewer = reviewer
 
     @property
     def title(self) -> str:
@@ -354,7 +361,47 @@ class BaseAgent[TOutput: AgentOutput](ABC):
                 },
             )
 
+            await self._review(artifact, len(draft.derived_from))
+
         return artifact_ids, edge_ids
+
+    async def _review(self, artifact: Artifact, upstream_count: int) -> None:
+        """Score the artifact just written.
+
+        Deliberately fail-open and deliberately last: the artifact, its versions,
+        its trace edges, and its event are already durable before this runs. A
+        reviewer that is slow, unavailable, or broken costs the organization a
+        quality signal — it must never cost it the work.
+        """
+        if self._reviewer is None:
+            return
+
+        try:
+            resolved = await self._memory.artifacts.get_version(artifact.id)
+            review = await self._reviewer.review(
+                resolved.artifact, resolved.version, upstream_count=upstream_count
+            )
+            await self._memory.reviews.upsert(review)
+
+            await self._publish(
+                artifact.project_id,
+                EventType.ARTIFACT_REVIEWED,
+                f"{artifact.title} reviewed — {review.quality_score}/100 ({review.band})",
+                {
+                    "artifact_id": artifact.id,
+                    "artifact_version": review.artifact_version,
+                    "quality_score": review.quality_score,
+                    "verdict": review.verdict.value,
+                    "reasoning_applied": review.reasoning_applied,
+                },
+            )
+
+        except Exception:
+            logger.warning(
+                "Review failed; the artifact stands unreviewed",
+                extra={"artifact_id": artifact.id, "role": self.role.value},
+                exc_info=True,
+            )
 
     def _guard_against_orphan(self, draft: ArtifactDraft, available: set[str]) -> None:
         """Reject artifacts that fail to declare their upstream.
