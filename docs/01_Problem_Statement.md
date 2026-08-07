@@ -1,3 +1,50 @@
+> AI Note:
+> This document forms part of the implementation specification for Project Victorious. Claude should treat it as architectural guidance rather than descriptive documentation.
+
+# AI IMPLEMENTATION CONTEXT (Read First)
+
+The documents in this repository collectively define the complete specification of Project Victorious.
+
+When implementing this project, treat these documents as the single source of truth.
+
+## Important Architectural Context
+
+Project Victorious is NOT another implementation of Mutagent.
+
+Mutagent is the engineering framework used to develop Project Victorious.
+
+Project Victorious is the AI system being developed.
+
+The distinction is fundamental.
+
+Mutagent solves:
+
+- How to build better AI agents.
+- How to evaluate AI agents.
+- How to diagnose AI agents.
+- How to optimize AI agents.
+
+Project Victorious solves:
+
+- How to coordinate an entire software engineering organization.
+- How to transform business ideas into production-ready software.
+- How to maintain engineering consistency across the software lifecycle.
+- How to continuously evolve software products after deployment.
+
+Mutagent develops Victorious.
+
+Victorious develops software products.
+
+Never redesign Project Victorious into another Helix implementation.
+
+Never duplicate Mutagent functionality.
+
+Instead, build an AI-native software engineering organization that complements Mutagent.
+
+Throughout implementation, assume Mutagent is available as the engineering lifecycle responsible for continuously improving Project Victorious itself.
+
+
+
 Problem Statement
 ## Engineering Coordination: The Emerging Bottleneck in Modern Software Development
 
@@ -106,4 +153,22 @@ Understanding this coordination problem provides the foundation for exploring a 
 
 
 
-**AI Implementation Guidance:** This project is focused exclusively on solving the engineering coordination problem in software development by building an AI-powered engineering organization rather than another AI coding assistant. The objective is to transform a raw product idea into a production-ready software system by orchestrating specialized AI agents that collaboratively perform the responsibilities of a Product Manager, Business Analyst, Software Architect, UI/UX Designer, Frontend Engineer, Backend Engineer, Database Engineer, QA Engineer, Security Engineer, DevOps Engineer, and Documentation Engineer under the supervision of a central Coordinator Agent. Every agent should have clearly defined responsibilities, communicate through structured workflows, validate upstream decisions before producing downstream outputs, identify ambiguities, explain trade-offs, maintain consistency across requirements, architecture, implementation, testing, deployment, and documentation, and support human approval for critical decisions. The system should automatically generate and synchronize PRDs, architecture documents, database schemas, API contracts, UI designs, development tasks, source code, testing strategies, deployment plans, and documentation while tracking dependencies and adapting to changing requirements without losing context. The architecture should be modular, scalable, production-ready, explainable, extensible, and maintainable, with support for multiple AI providers, future enterprise integrations, and human-in-the-loop workflows. This repository should contain only components that directly contribute to reducing engineering coordination overhead; features unrelated to this objective should be avoided. Whenever multiple implementation approaches are possible, always prefer the one that most effectively improves engineering orchestration, decision consistency, traceability, collaboration, and end-to-end software lifecycle automation rather than merely increasing code generation speed.
+**AI Implementation Guidance:** This project is focused exclusively on solving the engineering coordination problem in software development by building an AI-powered engineering organization rather than another AI coding assistant. The objective is to transform a raw product idea into a production-ready software system by orchestrating specialized AI agents that collaboratively perform the responsibilities of a Product Manager, Business Analyst, Software Architect, UI/UX Designer, Frontend Engineer, Backend Engineer, Database Engineer, QA Engineer, Security Engineer, DevOps Engineer, and Documentation Engineer under the supervision of a central Executive AI (Engineering Director). Every agent should have clearly defined responsibilities, communicate through structured workflows, validate upstream decisions before producing downstream outputs, identify ambiguities, explain trade-offs, maintain consistency across requirements, architecture, implementation, testing, deployment, and documentation, and support human approval for critical decisions. The system should automatically generate and synchronize PRDs, architecture documents, database schemas, API contracts, UI designs, development tasks, source code, testing strategies, deployment plans, and documentation while tracking dependencies and adapting to changing requirements without losing context. The architecture should be modular, scalable, production-ready, explainable, extensible, and maintainable, with support for multiple AI providers, future enterprise integrations, and human-in-the-loop workflows. This repository should contain only components that directly contribute to reducing engineering coordination overhead; features unrelated to this objective should be avoided. Whenever multiple implementation approaches are possible, always prefer the one that most effectively improves engineering orchestration, decision consistency, traceability, collaboration, and end-to-end software lifecycle automation rather than merely increasing code generation speed.
+
+
+## AI Repository Guidance
+
+This repository is intended to be implemented using Claude Code together with Mutagent.
+
+The purpose of these documents is not only to describe the product, but also to guide implementation decisions.
+
+Whenever implementation choices exist:
+
+1. Never simplify the architecture merely to reduce implementation effort.
+2. Prefer modular agents over monolithic prompts.
+3. Prefer production-quality architecture over hackathon shortcuts.
+4. Preserve clear responsibility boundaries between engineering roles.
+5. Treat every document in the docs folder as part of the system specification.
+6. Maintain complete traceability from requirements through deployment.
+7. Keep humans in approval loops for major engineering decisions.
+8. Assume future enterprise scalability.
