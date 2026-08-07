@@ -59,11 +59,15 @@ export async function SystemStatus() {
         </CardHeader>
         <CardContent>
           <p className="text-sm leading-relaxed text-content-muted">
-            The workspace could not reach the Victorious API. Start it with{" "}
+            The workspace could not reach the Victorious API. From{" "}
+            <span className="font-mono text-xs text-content">apps/api</span>, start it
+            with{" "}
             <code className="rounded bg-canvas-deep px-1.5 py-0.5 font-mono text-xs text-content">
-              uvicorn app.main:app --reload
+              .venv/Scripts/python -m uvicorn app.main:app --reload
             </code>{" "}
-            from <span className="font-mono text-xs text-content">apps/api</span>.
+            — a bare <code className="font-mono text-xs">uvicorn</code> resolves to a
+            global install without the dependencies, which exits without binding the
+            port.
           </p>
         </CardContent>
       </Card>

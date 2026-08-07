@@ -63,12 +63,15 @@ export default async function DashboardPage() {
           title="The workspace cannot reach the API"
           description={
             <>
-              Start it with{" "}
+              From <span className="font-mono text-xs text-content">apps/api</span>, start
+              it with{" "}
               <code className="rounded bg-surface-raised px-1.5 py-0.5 font-mono text-xs text-content">
-                uvicorn app.main:app --reload
+                .venv/Scripts/python -m uvicorn app.main:app --reload
               </code>{" "}
-              from <span className="font-mono text-xs text-content">apps/api</span>, then
-              reload this page.
+              — the interpreter has to be the project&apos;s virtualenv, or a bare{" "}
+              <code className="font-mono text-xs">uvicorn</code> resolves to a global
+              install that has none of the dependencies and exits without ever binding
+              the port. Then reload this page.
             </>
           }
         />
