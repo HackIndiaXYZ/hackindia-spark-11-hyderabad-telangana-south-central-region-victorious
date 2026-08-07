@@ -69,7 +69,12 @@ export function useEventStream(
   activityRef.current = onActivity;
 
   useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+    // Same-origin by default, through the rewrite proxy in `next.config.ts`.
+    // `EventSource` cannot send credentials or custom headers, so it is entirely
+    // at the mercy of the API's CORS allowlist when it goes cross-origin — which
+    // is why the stream is the first thing to break when the workspace is opened
+    // on a host other than the one origin that allowlist names.
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
     const source = new EventSource(`${base}/api/v1/projects/${projectId}/events/stream`);
 
     let debounce: ReturnType<typeof setTimeout> | undefined;
