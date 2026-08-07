@@ -69,6 +69,14 @@ class LLMSettings(BaseModel):
         default="./fixtures",
         description="Directory of recorded provider responses used by the fixture provider.",
     )
+    record_fixtures: bool = Field(
+        default=False,
+        description=(
+            "Wrap the live provider in a recorder, writing every response to "
+            "`fixture_dir`. Run once against a real provider to produce the "
+            "offline demo corpus."
+        ),
+    )
     max_retries: int = Field(default=3, ge=0, le=10)
     timeout_seconds: float = Field(default=120.0, gt=0)
 

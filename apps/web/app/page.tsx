@@ -22,7 +22,7 @@ const MILESTONE_LABELS = {
 const MILESTONES = [
   { id: "M0", name: "Foundation & architectural skeleton", state: "complete" },
   { id: "M1", name: "Shared organizational memory & traceability", state: "complete" },
-  { id: "M2", name: "Provider abstraction & agent framework", state: "idle" },
+  { id: "M2", name: "Provider abstraction & agent framework", state: "complete" },
   { id: "M3", name: "Executive AI & lifecycle orchestration", state: "idle" },
   { id: "M4", name: "The seven engineering agents", state: "idle" },
   { id: "M5", name: "Workspace UI", state: "idle" },
@@ -50,7 +50,7 @@ export default function FoundationPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-6 py-16">
       <header className="space-y-3">
-        <StatusBadge state="active">Milestone 1</StatusBadge>
+        <StatusBadge state="active">Milestone 2</StatusBadge>
         <h1 className="text-2xl font-semibold tracking-tight">Project Victorious</h1>
         <p className="text-content-muted">
           An AI-native software engineering workspace. Specialized engineering agents coordinate

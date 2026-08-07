@@ -16,6 +16,7 @@ fifteen specification documents are read-only input.
 | [0005](0005-runtime-infrastructure-deviations.md) | Runtime infrastructure deviations from the specified stack | Accepted | 0 |
 | [0006](0006-code-generation-depth.md) | Generated output is an inspectable scaffold, not a runnable application | Accepted | 0, 4 |
 | [0007](0007-traceability-model.md) | Traceability edges bind identity and record upstream version | Accepted | 1, 8 |
+| [0008](0008-fixture-provider-and-fallback.md) | Recorded fixtures are a first-class provider, and the fallback is silent-but-visible | Accepted | 2 |
 
 ## Deviations from the specification
 

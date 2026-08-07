@@ -19,6 +19,8 @@ from app.core.health import ComponentHealth, HealthRegistry, HealthStatus
 from app.core.logging import get_logger
 from app.db.session import Database
 from app.events.bus import EventBus
+from app.llm.provider import LLMProvider
+from app.llm.registry import ProviderHealthCheck, build_provider
 from app.memory.context_builder import ContextBuilder
 from app.memory.health import DatabaseHealthCheck
 from app.memory.repository import SharedMemory
@@ -88,10 +90,17 @@ def build_container(settings: Settings) -> Container:
 
     container.register_instance(EventBus, EventBus(memory.events))
 
+    # --- Reasoning -----------------------------------------------------------
+    # The provider swap point (ADR-0004). Nothing downstream names a vendor;
+    # changing VICTORIOUS_LLM__PROVIDER changes the backend for every agent.
+    provider = build_provider(settings.llm)
+    container.register_instance(LLMProvider, provider)  # type: ignore[type-abstract]
+
     # --- Health --------------------------------------------------------------
     health_registry = HealthRegistry()
     health_registry.register(ProcessHealthCheck())
     health_registry.register(DatabaseHealthCheck(database))
+    health_registry.register(ProviderHealthCheck(provider, settings.llm))
     container.register_instance(HealthRegistry, health_registry)
 
     logger.info(

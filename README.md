@@ -20,19 +20,26 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 1 of 10 complete — Shared organizational memory & traceability.**
+**Milestone 2 of 10 complete — Provider abstraction & agent framework.**
 
-The architectural boundaries, dependency injection, configuration, structured
-logging, error envelope, and health checking are in place (M0), and the shared
-organizational memory now holds projects, artifacts with append-only version
-history, the traceability graph, agent runs, approvals, and events (M1). The
-engineering agents themselves arrive in Milestones 2–4.
+In place so far: the architectural boundaries, dependency injection,
+configuration, structured logging, error envelope, and health checking (M0); the
+shared organizational memory holding projects, artifacts with append-only version
+history, the traceability graph, agent runs, approvals, and events (M1); and the
+reasoning-provider abstraction plus the agent execution framework (M2). The seven
+engineering agents themselves arrive in Milestone 4.
 
-The traceability model already answers the question
-[`04_Existing_Solutions.md`](docs/04_Existing_Solutions.md) says nothing on the
-market answers — *which downstream artifacts does this requirement change
-invalidate?* — because staleness is computed from the graph rather than stored as
-a flag. See [ADR-0007](docs/adr/0007-traceability-model.md).
+Two properties are already load-bearing:
+
+- **Staleness is computed, not stored.** The traceability model answers the
+  question [`04_Existing_Solutions.md`](docs/04_Existing_Solutions.md) says
+  nothing on the market answers — *which downstream artifacts does this
+  requirement change invalidate?* — because an artifact is stale when a
+  traceability edge cites an older version than its upstream currently has.
+  See [ADR-0007](docs/adr/0007-traceability-model.md).
+- **No agent can produce an orphan.** The agent base class rejects any artifact
+  that fails to declare the upstream it was derived from, so nothing can be
+  invisible to impact analysis.
 
 See [`docs/09_MVP_Roadmap.md`](docs/09_MVP_Roadmap.md) for scope and
 [`docs/adr/`](docs/adr/README.md) for decisions and deviations taken so far.
@@ -63,8 +70,11 @@ npm run dev
 
 Serves on `http://localhost:3000`.
 
-**Configuration** — copy `.env.example` to `.env`. No API key is needed until
-Milestone 2; the `fixture` provider replays recorded responses offline.
+**Configuration** — copy `.env.example` to `.env`. **No API key is required to
+run anything.** Without one the platform falls back to the `fixture` provider,
+which replays recorded reasoning from disk; `/health/ready` reports `degraded` and
+names the real backend, so the fallback is never silent. See
+[ADR-0008](docs/adr/0008-fixture-provider-and-fallback.md).
 
 **Containers** — `docker compose up --build` runs the full stack with PostgreSQL.
 This path is written but **not yet verified** (no Docker on the development
@@ -108,6 +118,8 @@ apps/
       db/         SQLAlchemy models, session, Alembic migrations
       memory/     Shared organizational memory + agent context assembly
       events/     Event bus (durable append + live fan-out)
+      llm/        Provider abstraction: Anthropic, Gemini, fixture replay
+      agents/     Agent execution framework + prompts (roles land in M4)
       api/        HTTP transport only
     tests/
   web/            Next.js — the engineering workspace
