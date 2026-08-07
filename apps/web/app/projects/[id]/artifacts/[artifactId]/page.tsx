@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ChevronLeft } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronLeft, History } from "lucide-react";
 
 import { ArtifactBody } from "@/components/artifact-body";
 import {
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { api, badgeState, stageLabel, typeLabel } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 /**
  * One engineering artifact, with its content, provenance, and version history.
@@ -19,6 +20,10 @@ import { ApiError } from "@/lib/api-client";
  * The version list is what makes `12_Risk_Analysis.md`'s "version-controlled
  * engineering artifacts" mitigation visible: an earlier version is readable
  * exactly as the agent that consumed it saw it.
+ *
+ * The document takes the width and the metadata takes a rail, because this is
+ * the one page in the workspace a user comes to *read*. The rail sticks so the
+ * review and the version history stay reachable through a long artifact.
  */
 
 export const dynamic = "force-dynamic";
@@ -49,15 +54,20 @@ export default async function ArtifactPage({
     <div className="space-y-6">
       <Link
         href={`/projects/${id}/knowledge`}
-        className="inline-flex items-center gap-1 text-xs text-content-subtle transition-colors hover:text-content"
+        className="group inline-flex items-center gap-1 text-xs text-content-subtle transition-colors hover:text-content"
       >
-        <ChevronLeft className="size-3" aria-hidden="true" />
+        <ChevronLeft
+          className="size-3 transition-transform duration-200 group-hover:-translate-x-0.5"
+          aria-hidden="true"
+        />
         Knowledge Base
       </Link>
 
-      <header className="space-y-3">
+      <header className="animate-[rise_0.4s_var(--ease-out-quint)_both] space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h1 className="text-xl font-semibold tracking-tight">{artifact.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-balance text-content">
+            {artifact.title}
+          </h1>
           <div className="flex items-center gap-2">
             {artifact.is_stale && <StatusBadge state="stale">stale</StatusBadge>}
             <StatusBadge state={badgeState(artifact.status)}>
@@ -66,29 +76,46 @@ export default async function ArtifactPage({
           </div>
         </div>
 
-        <p className="text-xs text-content-subtle">
-          {typeLabel(artifact.type)} · {stageLabel(artifact.stage)} ·{" "}
-          {artifact.owner_title} · version {artifact.version}
-          {!artifact.is_latest && " (historical)"}
-          {artifact.confidence !== null &&
-            ` · ${Math.round(artifact.confidence * 100)}% confidence`}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-content-subtle">
+          <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-content-muted">
+            {typeLabel(artifact.type)}
+          </span>
+          <Dot />
+          <span>{stageLabel(artifact.stage)}</span>
+          <Dot />
+          <span>{artifact.owner_title}</span>
+          <Dot />
+          <span className="font-mono">
+            v{artifact.version}
+            {!artifact.is_latest && " (historical)"}
+          </span>
+          {artifact.confidence !== null && (
+            <>
+              <Dot />
+              <span className="font-mono">
+                {Math.round(artifact.confidence * 100)}% confidence
+              </span>
+            </>
+          )}
+        </div>
       </header>
 
       {artifact.is_stale && (
-        <div className="flex gap-3 rounded-[--radius-card] border border-state-stale/30 bg-state-stale/5 px-4 py-3">
+        <div className="flex animate-[rise_0.45s_var(--ease-out-quint)_both] gap-3 rounded-[--radius-card] border border-state-stale/35 bg-state-stale/[0.07] px-4 py-3.5">
           <AlertTriangle
             className="mt-0.5 size-4 shrink-0 text-state-stale"
             aria-hidden="true"
           />
           <div className="space-y-1">
-            <p className="text-sm text-content">Out of date with its upstream</p>
-            <p className="text-xs text-content-muted">
+            <p className="text-sm font-medium text-content">
+              Out of date with its upstream
+            </p>
+            <p className="text-xs leading-relaxed text-content-muted">
               This was derived from an earlier version of something that has since
               changed.{" "}
               <Link
                 href={`/projects/${id}/traceability`}
-                className="text-accent hover:text-accent-hover"
+                className="text-accent transition-colors hover:text-accent-hover"
               >
                 See what it depends on →
               </Link>
@@ -97,10 +124,10 @@ export default async function ArtifactPage({
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-        <div className="space-y-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 space-y-4">
           <Card>
-            <CardContent className="pt-5">
+            <CardContent className="pt-6">
               <ArtifactBody markdown={artifact.body_markdown} />
             </CardContent>
           </Card>
@@ -114,7 +141,7 @@ export default async function ArtifactPage({
           )}
         </div>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 lg:sticky lg:top-56 lg:self-start">
           <Card>
             <CardHeader className="flex-row items-center justify-between gap-2">
               <CardTitle>Engineering review</CardTitle>
@@ -135,11 +162,12 @@ export default async function ArtifactPage({
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center gap-2">
+              <History className="size-3.5 text-content-subtle" aria-hidden="true" />
               <CardTitle>Version history</CardTitle>
             </CardHeader>
             <CardContent>
-              <ol className="space-y-2">
+              <ol className="space-y-1">
                 {artifact.versions.map((entry) => {
                   const active = entry.version === artifact.version;
                   return (
@@ -147,17 +175,20 @@ export default async function ArtifactPage({
                       <Link
                         href={`/projects/${id}/artifacts/${artifactId}?version=${entry.version}`}
                         aria-current={active ? "page" : undefined}
-                        className={
+                        className={cn(
+                          "block rounded-lg border px-3 py-2 transition-colors duration-150",
                           active
-                            ? "block rounded-md border border-accent-muted bg-accent-muted/20 px-3 py-2"
-                            : "block rounded-md border border-transparent px-3 py-2 transition-colors hover:bg-surface-raised"
-                        }
+                            ? "border-accent/40 bg-accent/[0.08]"
+                            : "border-transparent hover:border-border hover:bg-surface-raised",
+                        )}
                       >
                         <p className="font-mono text-xs text-content">
                           v{entry.version}
-                          {entry.version === artifact.current_version && " · latest"}
+                          {entry.version === artifact.current_version && (
+                            <span className="text-content-subtle"> · latest</span>
+                          )}
                         </p>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-content-subtle">
+                        <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-content-subtle">
                           {entry.summary || "No summary"}
                         </p>
                       </Link>
@@ -174,18 +205,22 @@ export default async function ArtifactPage({
                 <CardTitle>Provenance</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-xs">
-                <p className="text-content-muted">
+                <p className="leading-relaxed text-content-muted">
                   Produced by the {artifact.owner_title} during{" "}
                   {stageLabel(artifact.stage).toLowerCase()}.
                 </p>
-                <p className="font-mono break-all text-content-subtle">
+                <p className="rounded-md bg-canvas-deep px-2 py-1.5 font-mono break-all text-content-subtle">
                   {artifact.produced_by_run_id}
                 </p>
                 <Link
                   href={`/projects/${id}/traceability`}
-                  className="inline-block text-accent hover:text-accent-hover"
+                  className="group/link inline-flex items-center gap-1 text-accent transition-colors hover:text-accent-hover"
                 >
-                  View in traceability graph →
+                  View in traceability graph
+                  <ArrowRight
+                    className="size-3 transition-transform duration-200 group-hover/link:translate-x-0.5"
+                    aria-hidden="true"
+                  />
                 </Link>
               </CardContent>
             </Card>
@@ -193,5 +228,13 @@ export default async function ArtifactPage({
         </aside>
       </div>
     </div>
+  );
+}
+
+function Dot() {
+  return (
+    <span aria-hidden="true" className="text-content-subtle/50">
+      ·
+    </span>
   );
 }

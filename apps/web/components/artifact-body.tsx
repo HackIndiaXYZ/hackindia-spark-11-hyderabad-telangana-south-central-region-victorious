@@ -19,22 +19,22 @@ import { cn } from "@/lib/utils";
  */
 export function ArtifactBody({ markdown }: { markdown: string }) {
   return (
-    <div className="max-w-none text-sm leading-relaxed text-content-muted">
+    <div className="max-w-none text-sm leading-[1.75] text-content-muted">
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="mt-8 mb-3 text-xl font-semibold tracking-tight text-content first:mt-0">
+            <h1 className="mt-9 mb-4 text-xl font-semibold tracking-tight text-balance text-content first:mt-0">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mt-7 mb-2 border-b border-border pb-1.5 text-base font-semibold text-content">
+            <h2 className="mt-8 mb-3 border-b border-border pb-2 text-base font-semibold tracking-tight text-content">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mt-5 mb-2 text-sm font-semibold text-content">{children}</h3>
+            <h3 className="mt-6 mb-2 text-sm font-semibold text-content">{children}</h3>
           ),
           p: ({ children }) => <p className="my-3">{children}</p>,
           ul: ({ children }) => (
@@ -43,7 +43,7 @@ export function ArtifactBody({ markdown }: { markdown: string }) {
           ol: ({ children }) => (
             <ol className="my-3 list-decimal space-y-1 pl-5">{children}</ol>
           ),
-          li: ({ children }) => <li className="pl-1">{children}</li>,
+          li: ({ children }) => <li className="pl-1 marker:text-content-subtle">{children}</li>,
           strong: ({ children }) => (
             <strong className="font-medium text-content">{children}</strong>
           ),
@@ -58,17 +58,19 @@ export function ArtifactBody({ markdown }: { markdown: string }) {
             </a>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="my-4 border-l-2 border-border-strong pl-4 text-content-subtle">
+            <blockquote className="my-4 rounded-r-lg border-l-2 border-accent-muted bg-surface-raised/40 py-2 pr-3 pl-4 text-content-subtle">
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="my-6 border-border" />,
+          hr: () => (
+            <hr className="my-7 h-px border-0 bg-gradient-to-r from-border via-border to-transparent" />
+          ),
 
           // Tables are how nearly every artifact presents its structured data,
           // and they are frequently wider than the column. The wrapper scrolls
           // so the page itself never does.
           table: ({ children }) => (
-            <div className="my-4 overflow-x-auto rounded-md border border-border">
+            <div className="my-5 overflow-x-auto rounded-lg border border-border elevated">
               <table className="w-full border-collapse text-xs">{children}</table>
             </div>
           ),
@@ -76,12 +78,12 @@ export function ArtifactBody({ markdown }: { markdown: string }) {
             <thead className="bg-surface-raised text-left">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="border-b border-border px-3 py-2 font-medium whitespace-nowrap text-content">
+            <th className="border-b border-border px-3 py-2.5 text-[11px] font-medium tracking-wide whitespace-nowrap text-content uppercase">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border-b border-border px-3 py-2 align-top">{children}</td>
+            <td className="border-b border-border/70 px-3 py-2.5 align-top">{children}</td>
           ),
 
           // `pre` is flattened because the `code` renderer below emits the block
@@ -98,19 +100,25 @@ export function ArtifactBody({ markdown }: { markdown: string }) {
 
             if (!language) {
               return (
-                <code className="rounded bg-surface-raised px-1.5 py-0.5 font-mono text-[0.85em] text-content">
+                <code className="rounded border border-border/70 bg-surface-raised px-1.5 py-0.5 font-mono text-[0.85em] text-content">
                   {children}
                 </code>
               );
             }
 
             return (
-              <div className="my-4 overflow-hidden rounded-md border border-border">
-                <div className="border-b border-border bg-surface-raised px-3 py-1.5 font-mono text-[11px] text-content-subtle">
+              <div className="my-5 overflow-hidden rounded-lg border border-border elevated">
+                <div className="flex items-center gap-1.5 border-b border-border bg-surface-raised px-3 py-2 font-mono text-[11px] text-content-subtle">
+                  <span
+                    aria-hidden="true"
+                    className="size-1.5 rounded-full bg-border-strong"
+                  />
                   {language}
                 </div>
-                <pre className="overflow-x-auto bg-canvas p-4">
-                  <code className={cn("font-mono text-xs text-content")}>{source}</code>
+                <pre className="overflow-x-auto bg-canvas-deep p-4">
+                  <code className={cn("font-mono text-xs leading-relaxed text-content")}>
+                    {source}
+                  </code>
                 </pre>
               </div>
             );
