@@ -20,13 +20,18 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 5 of 10 complete — the workspace is usable.**
+**Milestone 6 of 10 complete — the organization is visible working, live.**
 
-The whole platform now runs end to end with **no API key and no network**: create
-a project from a name and a description, watch the organization work through nine
-lifecycle stages, approve three gates, and read all 22 generated artifacts in the
-browser — rendered markdown, tables, Mermaid component diagrams, code, and full
-version history.
+The whole platform runs end to end with **no API key and no network**: create a
+project from a name and a description, watch the organization work through nine
+lifecycle stages *as it happens*, approve three gates, and read all 22 generated
+artifacts in the browser — rendered markdown, tables, Mermaid component diagrams,
+code, and full version history.
+
+Agent cards and the Engineering Timeline update live over Server-Sent Events, with
+no polling and no page refresh. The stream carries notifications and the workspace
+re-reads the API, so what you see can never disagree with what the platform
+believes ([ADR-0011](docs/adr/0011-stream-carries-signals-not-state.md)).
 
 ```bash
 # terminal 1

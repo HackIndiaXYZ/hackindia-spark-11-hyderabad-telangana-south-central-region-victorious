@@ -14,6 +14,7 @@ from fastapi import Depends, Request
 from app.core.config import Settings
 from app.core.container import Container
 from app.core.health import HealthRegistry
+from app.events.bus import EventBus
 from app.memory.repository import SharedMemory
 from app.orchestration.runner import OrchestrationRunner
 
@@ -52,9 +53,20 @@ def get_runner(
     return container.resolve(OrchestrationRunner)
 
 
+def get_event_bus(container: Annotated[Container, Depends(get_container)]) -> EventBus:
+    """Resolve the event bus.
+
+    A process-wide singleton: the publisher is whichever request is advancing the
+    workflow, and subscribers are the open streams. They only meet if they share
+    one instance.
+    """
+    return container.resolve(EventBus)
+
+
 # Named aliases keep router signatures readable as the dependency set grows.
 ContainerDep = Annotated[Container, Depends(get_container)]
 SettingsDep = Annotated[Settings, Depends(get_settings_dep)]
 HealthRegistryDep = Annotated[HealthRegistry, Depends(get_health_registry)]
 MemoryDep = Annotated[SharedMemory, Depends(get_memory)]
 RunnerDep = Annotated[OrchestrationRunner, Depends(get_runner)]
+EventBusDep = Annotated[EventBus, Depends(get_event_bus)]

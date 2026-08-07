@@ -19,6 +19,7 @@ fifteen specification documents are read-only input.
 | [0008](0008-fixture-provider-and-fallback.md) | Recorded fixtures are a first-class provider, and the fallback is silent-but-visible | Accepted | 2 |
 | [0009](0009-orchestration-state-and-executive-boundary.md) | Workflow state lives in shared memory, and the Executive AI cannot perform engineering work | Accepted | 3 |
 | [0010](0010-agent-roster-and-stage-ownership.md) | Eight agents fill seven roles, and artifacts are rendered from structured output | Accepted | 4 |
+| [0011](0011-stream-carries-signals-not-state.md) | The live stream carries signals; the REST API carries state | Accepted | 6 |
 
 ## Deviations from the specification
 
