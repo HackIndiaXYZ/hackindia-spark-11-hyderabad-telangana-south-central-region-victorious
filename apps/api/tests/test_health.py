@@ -19,13 +19,22 @@ async def test_liveness_reports_healthy(client: AsyncClient) -> None:
 
 
 async def test_readiness_reports_registered_components(client: AsyncClient) -> None:
+    """Every component that registers a check appears, with no change here.
+
+    ``shared_memory`` arrived in Milestone 1 by registering itself in the
+    composition root — the readiness endpoint required no modification. Later
+    milestones' components join the same way.
+    """
     response = await client.get("/health/ready")
 
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == HealthStatus.HEALTHY.value
-    assert [component["name"] for component in body["components"]] == ["api"]
-    assert body["components"][0]["latency_ms"] >= 0
+
+    components = {component["name"]: component for component in body["components"]}
+    assert {"api", "shared_memory"} <= set(components)
+    assert components["shared_memory"]["status"] == HealthStatus.HEALTHY.value
+    assert all(component["latency_ms"] >= 0 for component in components.values())
 
 
 async def test_readiness_returns_503_when_critical_component_fails(

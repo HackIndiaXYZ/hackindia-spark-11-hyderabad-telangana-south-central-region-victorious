@@ -15,6 +15,7 @@ fifteen specification documents are read-only input.
 | [0004](0004-llm-provider-default.md) | Claude as the default reasoning provider | Accepted | 0, 2 |
 | [0005](0005-runtime-infrastructure-deviations.md) | Runtime infrastructure deviations from the specified stack | Accepted | 0 |
 | [0006](0006-code-generation-depth.md) | Generated output is an inspectable scaffold, not a runnable application | Accepted | 0, 4 |
+| [0007](0007-traceability-model.md) | Traceability edges bind identity and record upstream version | Accepted | 1, 8 |
 
 ## Deviations from the specification
 

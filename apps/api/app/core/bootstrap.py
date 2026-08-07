@@ -6,8 +6,7 @@ each one. Moving a swap decision into this file is what keeps the rest of the
 codebase free of conditional wiring.
 
 Each milestone extends ``build_container`` with its own registrations:
-Milestone 1 the memory repository, Milestone 2 the LLM provider registry,
-Milestone 3 the orchestrator.
+Milestone 2 the LLM provider registry, Milestone 3 the orchestrator.
 """
 
 from __future__ import annotations
@@ -18,6 +17,12 @@ from app.core.config import Settings
 from app.core.container import Container
 from app.core.health import ComponentHealth, HealthRegistry, HealthStatus
 from app.core.logging import get_logger
+from app.db.session import Database
+from app.events.bus import EventBus
+from app.memory.context_builder import ContextBuilder
+from app.memory.health import DatabaseHealthCheck
+from app.memory.repository import SharedMemory
+from app.memory.sql_repository import SqlSharedMemory
 
 logger = get_logger(__name__)
 
@@ -65,8 +70,28 @@ def build_container(settings: Settings) -> Container:
 
     container.register_instance(Settings, settings)
 
+    # --- Persistence and shared organizational memory ------------------------
+    # The Database singleton owns the engine; the container disposes it on
+    # shutdown through its `aclose` hook.
+    database = Database(settings.database)
+    container.register_instance(Database, database)
+
+    memory = SqlSharedMemory(database)
+    # Registered against the protocol, not the concrete class: this is the swap
+    # point ADR-0003 exists to preserve. Nothing downstream names SqlSharedMemory.
+    container.register_instance(SharedMemory, memory)  # type: ignore[type-abstract]
+
+    container.register_singleton(
+        ContextBuilder,
+        lambda: ContextBuilder(memory.projects, memory.artifacts),
+    )
+
+    container.register_instance(EventBus, EventBus(memory.events))
+
+    # --- Health --------------------------------------------------------------
     health_registry = HealthRegistry()
     health_registry.register(ProcessHealthCheck())
+    health_registry.register(DatabaseHealthCheck(database))
     container.register_instance(HealthRegistry, health_registry)
 
     logger.info(

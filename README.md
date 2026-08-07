@@ -20,11 +20,19 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 0 of 10 — Foundation & architectural skeleton.**
+**Milestone 1 of 10 complete — Shared organizational memory & traceability.**
 
 The architectural boundaries, dependency injection, configuration, structured
-logging, error envelope, and health checking are in place and tested. The
+logging, error envelope, and health checking are in place (M0), and the shared
+organizational memory now holds projects, artifacts with append-only version
+history, the traceability graph, agent runs, approvals, and events (M1). The
 engineering agents themselves arrive in Milestones 2–4.
+
+The traceability model already answers the question
+[`04_Existing_Solutions.md`](docs/04_Existing_Solutions.md) says nothing on the
+market answers — *which downstream artifacts does this requirement change
+invalidate?* — because staleness is computed from the graph rather than stored as
+a flag. See [ADR-0007](docs/adr/0007-traceability-model.md).
 
 See [`docs/09_MVP_Roadmap.md`](docs/09_MVP_Roadmap.md) for scope and
 [`docs/adr/`](docs/adr/README.md) for decisions and deviations taken so far.
@@ -97,6 +105,9 @@ apps/
     app/
       domain/     Pure domain layer: no frameworks, no I/O
       core/       Config, logging, DI container, errors, health
+      db/         SQLAlchemy models, session, Alembic migrations
+      memory/     Shared organizational memory + agent context assembly
+      events/     Event bus (durable append + live fan-out)
       api/        HTTP transport only
     tests/
   web/            Next.js — the engineering workspace
@@ -105,6 +116,16 @@ evaluation/       Mutagent ADL artifacts (Milestone 9)
 ```
 
 Dependencies point inward: `api → orchestration → agents → memory → domain`.
+
+**Database migrations** — from `apps/api`:
+
+```bash
+.venv/Scripts/python -m alembic upgrade head      # apply
+.venv/Scripts/python -m alembic downgrade base    # reverse
+```
+
+Outside production the app creates any missing tables on startup, so no migration
+step is needed for local development.
 
 ---
 

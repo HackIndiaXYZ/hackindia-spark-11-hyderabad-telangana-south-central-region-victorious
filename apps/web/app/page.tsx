@@ -7,16 +7,21 @@ import { StatusBadge } from "@/components/ui/status-badge";
 /**
  * Foundation status page.
  *
- * Milestone 0 delivers the architectural skeleton, and this page reports on it
- * honestly: which layers exist, which are wired, and what is still ahead. The
- * marketing landing page arrives with Milestone 5; presenting a finished-looking
- * product over an unfinished one would be exactly the kind of shortcut
- * `15_Development_Guidelines.md` rules out.
+ * Reports honestly on what exists so far: which layers are built and wired, and
+ * what is still ahead. The marketing landing page arrives with Milestone 5;
+ * presenting a finished-looking product over an unfinished one would be exactly
+ * the kind of shortcut `15_Development_Guidelines.md` rules out.
  */
 
+const MILESTONE_LABELS = {
+  complete: "complete",
+  active: "in progress",
+  idle: "planned",
+} as const;
+
 const MILESTONES = [
-  { id: "M0", name: "Foundation & architectural skeleton", state: "active" },
-  { id: "M1", name: "Shared organizational memory & traceability", state: "idle" },
+  { id: "M0", name: "Foundation & architectural skeleton", state: "complete" },
+  { id: "M1", name: "Shared organizational memory & traceability", state: "complete" },
   { id: "M2", name: "Provider abstraction & agent framework", state: "idle" },
   { id: "M3", name: "Executive AI & lifecycle orchestration", state: "idle" },
   { id: "M4", name: "The seven engineering agents", state: "idle" },
@@ -45,7 +50,7 @@ export default function FoundationPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-6 py-16">
       <header className="space-y-3">
-        <StatusBadge state="active">Milestone 0</StatusBadge>
+        <StatusBadge state="active">Milestone 1</StatusBadge>
         <h1 className="text-2xl font-semibold tracking-tight">Project Victorious</h1>
         <p className="text-content-muted">
           An AI-native software engineering workspace. Specialized engineering agents coordinate
@@ -71,7 +76,7 @@ export default function FoundationPage() {
                 </span>
                 <span className="flex-1 text-sm text-content-muted">{milestone.name}</span>
                 <StatusBadge state={milestone.state}>
-                  {milestone.state === "active" ? "in progress" : "planned"}
+                  {MILESTONE_LABELS[milestone.state]}
                 </StatusBadge>
               </li>
             ))}

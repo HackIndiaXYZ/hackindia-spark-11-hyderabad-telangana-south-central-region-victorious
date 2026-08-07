@@ -19,6 +19,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import AccessLogMiddleware, CorrelationMiddleware
+from app.db.session import Database
 
 logger = get_logger(__name__)
 
@@ -47,6 +48,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "%s starting", resolved.app_name,
             extra={"version": resolved.version, "environment": resolved.environment.value},
         )
+
+        # Outside production, create any missing tables so a fresh checkout runs
+        # with no setup step. Production schema evolution belongs to Alembic —
+        # create_all cannot express a migration, only an initial shape.
+        if not resolved.is_production:
+            await app.state.container.resolve(Database).create_schema()
+
         try:
             yield
         finally:

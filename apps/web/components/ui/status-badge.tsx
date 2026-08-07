@@ -22,6 +22,7 @@ const statusBadge = cva(
   {
     variants: {
       state: {
+        complete: "border-state-complete/30 bg-state-complete/10 text-state-complete",
         active: "border-state-active/30 bg-state-active/10 text-state-active",
         waiting: "border-state-waiting/30 bg-state-waiting/10 text-state-waiting",
         approval: "border-state-approval/30 bg-state-approval/10 text-state-approval",
@@ -37,6 +38,7 @@ const statusBadge = cva(
 const dot = cva("size-1.5 rounded-full", {
   variants: {
     state: {
+      complete: "bg-state-complete",
       active: "bg-state-active",
       waiting: "bg-state-waiting",
       approval: "bg-state-approval",

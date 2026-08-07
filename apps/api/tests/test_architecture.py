@@ -23,7 +23,10 @@ APP_ROOT = Path(__file__).resolve().parent.parent / "app"
 _FORBIDDEN_IMPORTS: dict[str, tuple[str, ...]] = {
     "domain": ("app.core", "app.api", "app.db", "app.llm", "app.memory",
                "app.agents", "app.orchestration", "app.events"),
+    "db": ("app.api", "app.memory", "app.llm", "app.agents", "app.orchestration",
+           "app.events"),
     "memory": ("app.api", "app.agents", "app.orchestration"),
+    "events": ("app.api", "app.agents", "app.orchestration", "app.llm"),
     "llm": ("app.api", "app.agents", "app.orchestration", "app.memory"),
     "agents": ("app.api", "app.orchestration"),
     "orchestration": ("app.api",),
