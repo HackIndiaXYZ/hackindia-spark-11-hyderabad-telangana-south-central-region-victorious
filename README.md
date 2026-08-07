@@ -20,7 +20,7 @@ Built for the **Mutagent Challenge** (HackIndia Spark 11, Hyderabad).
 
 ## Status
 
-**Milestone 8 of 10 complete — the traceability graph is visible and navigable.**
+**Milestone 9 of 10 complete — evaluated, with the ADL evidence in-repo.**
 
 The whole platform runs end to end with **no API key and no network**: create a
 project from a name and a description, watch the organization work through nine
@@ -215,6 +215,28 @@ review.
 
 ---
 
+## Evaluation
+
+The platform is scored by a runnable harness in [`evaluation/`](evaluation/README.md),
+the evidence `02_Proposed_Solution.md` requires of a project built through
+Mutagent's Agentic Development Lifecycle. Everything runs offline.
+
+```bash
+apps/api/.venv/Scripts/python evaluation/run_evaluation.py   # scorecards
+apps/api/.venv/Scripts/python evaluation/adl_cycle.py        # one ADL cycle, measured
+```
+
+Eight deterministic scorers over three project briefs, **93.8% overall**. No
+scorer asks a language model to judge quality — a hallucinating grader would
+report improvement that did not happen.
+
+The documented cycle found that re-synchronisation was **divergent**: rebuilding
+stale work left *more* stale derivations than before it, because superseded trace
+edges still cited the versions they originally consumed. **167 → 0** after the
+fix. See [`evaluation/optimization-report.md`](evaluation/optimization-report.md).
+
+---
+
 ## Known gaps
 
 Stated plainly rather than discovered later.
@@ -233,6 +255,11 @@ Stated plainly rather than discovered later.
   edges are accurate but impact analysis is less discriminating downstream. See
   [ADR-0010](docs/adr/0010-agent-roster-and-stage-ownership.md).
 - **No syntax highlighting** in rendered code blocks — legible monospace only.
+- **The Mutagent evaluator package could not be installed.** `mutagent install
+  evaluator` fails on Windows with `spawn npm ENOENT` even with npm on PATH — the
+  CLI spawns `npm` rather than `npm.cmd`. Reported through `mutagent feedback
+  send`. The ADL methodology was followed regardless, with the evidence produced
+  in-repo.
 
 ---
 

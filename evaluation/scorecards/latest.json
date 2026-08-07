@@ -1,0 +1,241 @@
+{
+  "dataset": "project_briefs",
+  "generated_at": "2026-08-07T17:29:11.223233+00:00",
+  "overall": 0.9375,
+  "cases": [
+    {
+      "case_id": "hospital",
+      "project_name": "Hospital Management System",
+      "overall": 0.9375,
+      "scores": [
+        {
+          "name": "lifecycle_completion",
+          "value": 1.0,
+          "detail": "8/8 stages completed",
+          "raw": {
+            "missing": []
+          }
+        },
+        {
+          "name": "artifact_completeness",
+          "value": 1.0,
+          "detail": "8/8 required artifacts",
+          "raw": {
+            "missing": []
+          }
+        },
+        {
+          "name": "traceability_completeness",
+          "value": 1.0,
+          "detail": "19/19 downstream artifacts traced",
+          "raw": {
+            "orphans": []
+          }
+        },
+        {
+          "name": "internal_consistency",
+          "value": 1.0,
+          "detail": "no stale derivations",
+          "raw": {
+            "stale_count": 0
+          }
+        },
+        {
+          "name": "requirement_coverage",
+          "value": 0.5,
+          "detail": "1/2 requirements covered by tests",
+          "raw": {
+            "covered": 1,
+            "total": 2
+          }
+        },
+        {
+          "name": "decision_reviewability",
+          "value": 1.0,
+          "detail": "1/1 decisions record alternatives and rationale",
+          "raw": {
+            "total_choices": 1
+          }
+        },
+        {
+          "name": "approval_discipline",
+          "value": 1.0,
+          "detail": "3/3 required gates raised",
+          "raw": {
+            "missing": [],
+            "all_raised": [
+              "architecture",
+              "code_generation",
+              "requirements",
+              "technology_selection"
+            ]
+          }
+        },
+        {
+          "name": "agent_transparency",
+          "value": 1.0,
+          "detail": "8/8 runs report reasoning and confidence",
+          "raw": {
+            "runs": 8
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "college_erp",
+      "project_name": "College ERP",
+      "overall": 0.9375,
+      "scores": [
+        {
+          "name": "lifecycle_completion",
+          "value": 1.0,
+          "detail": "8/8 stages completed",
+          "raw": {
+            "missing": []
+          }
+        },
+        {
+          "name": "artifact_completeness",
+          "value": 1.0,
+          "detail": "8/8 required artifacts",
+          "raw": {
+            "missing": []
+          }
+        },
+        {
+          "name": "traceability_completeness",
+          "value": 1.0,
+          "detail": "19/19 downstream artifacts traced",
+          "raw": {
+            "orphans": []
+          }
+        },
+        {
+          "name": "internal_consistency",
+          "value": 1.0,
+          "detail": "no stale derivations",
+          "raw": {
+            "stale_count": 0
+          }
+        },
+        {
+          "name": "requirement_coverage",
+          "value": 0.5,
+          "detail": "1/2 requirements covered by tests",
+          "raw": {
+            "covered": 1,
+            "total": 2
+          }
+        },
+        {
+          "name": "decision_reviewability",
+          "value": 1.0,
+          "detail": "1/1 decisions record alternatives and rationale",
+          "raw": {
+            "total_choices": 1
+          }
+        },
+        {
+          "name": "approval_discipline",
+          "value": 1.0,
+          "detail": "3/3 required gates raised",
+          "raw": {
+            "missing": [],
+            "all_raised": [
+              "architecture",
+              "code_generation",
+              "requirements",
+              "technology_selection"
+            ]
+          }
+        },
+        {
+          "name": "agent_transparency",
+          "value": 1.0,
+          "detail": "8/8 runs report reasoning and confidence",
+          "raw": {
+            "runs": 8
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "event_booking",
+      "project_name": "Event Booking Platform",
+      "overall": 0.9375,
+      "scores": [
+        {
+          "name": "lifecycle_completion",
+          "value": 1.0,
+          "detail": "8/8 stages completed",
+          "raw": {
+            "missing": []
+          }
+        },
+        {
+          "name": "artifact_completeness",
+          "value": 1.0,
+          "detail": "8/8 required artifacts",
+          "raw": {
+            "missing": []
+          }
+        },
+        {
+          "name": "traceability_completeness",
+          "value": 1.0,
+          "detail": "19/19 downstream artifacts traced",
+          "raw": {
+            "orphans": []
+          }
+        },
+        {
+          "name": "internal_consistency",
+          "value": 1.0,
+          "detail": "no stale derivations",
+          "raw": {
+            "stale_count": 0
+          }
+        },
+        {
+          "name": "requirement_coverage",
+          "value": 0.5,
+          "detail": "1/2 requirements covered by tests",
+          "raw": {
+            "covered": 1,
+            "total": 2
+          }
+        },
+        {
+          "name": "decision_reviewability",
+          "value": 1.0,
+          "detail": "1/1 decisions record alternatives and rationale",
+          "raw": {
+            "total_choices": 1
+          }
+        },
+        {
+          "name": "approval_discipline",
+          "value": 1.0,
+          "detail": "3/3 required gates raised",
+          "raw": {
+            "missing": [],
+            "all_raised": [
+              "architecture",
+              "code_generation",
+              "requirements",
+              "technology_selection"
+            ]
+          }
+        },
+        {
+          "name": "agent_transparency",
+          "value": 1.0,
+          "detail": "8/8 runs report reasoning and confidence",
+          "raw": {
+            "runs": 8
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "project_briefs",
+  "description": "Project briefs the AI Engineering Organization is evaluated against. Each is the two-field input a real user provides — a name and a description — because 07_System_Architecture.md specifies that as the only onboarding.",
+  "version": 1,
+  "cases": [
+    {
+      "id": "hospital",
+      "name": "Hospital Management System",
+      "description": "A platform for managing patients, appointments, billing, doctors, and hospital operations.",
+      "notes": "The scenario named in 13_Demo_and_Pitch.md. Regulated domain, several interacting entities, obvious access-control obligations."
+    },
+    {
+      "id": "college_erp",
+      "name": "College ERP",
+      "description": "A system for managing students, courses, enrolment, attendance, grades, and fee collection.",
+      "notes": "Listed as an alternative in 13_Demo_and_Pitch.md. Similar shape to the hospital case, different domain vocabulary — checks the organization is not pattern-matching on one brief."
+    },
+    {
+      "id": "event_booking",
+      "name": "Event Booking Platform",
+      "description": "A platform where organisers publish events and attendees browse, book, and pay for tickets.",
+      "notes": "Two distinct user roles with different journeys, and a payment path — exercises whether the Product Manager separates them."
+    }
+  ]
+}

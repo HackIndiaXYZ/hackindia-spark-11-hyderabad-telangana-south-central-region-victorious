@@ -1,0 +1,11 @@
+{
+  "value": {
+    "title": "Approve the technology selection",
+    "what_changed": "The Software Architect selected PostgreSQL over MongoDB, recording the alternative considered and the trade-off accepted.",
+    "why": "The architect judged this expensive to reverse once code exists and raised it for review itself. The schema, the API contract, and the generated scaffold all assume it."
+  },
+  "usage": {
+    "input_tokens": 900,
+    "output_tokens": 220
+  }
+}

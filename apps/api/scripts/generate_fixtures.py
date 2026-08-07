@@ -58,6 +58,30 @@ GATE_NARRATIONS: dict[str, dict[str, str]] = {
             "reverse once code exists."
         ),
     },
+    "technology_selection": {
+        "title": "Approve the technology selection",
+        "what_changed": (
+            "The Software Architect selected PostgreSQL over MongoDB, recording "
+            "the alternative considered and the trade-off accepted."
+        ),
+        "why": (
+            "The architect judged this expensive to reverse once code exists and "
+            "raised it for review itself. The schema, the API contract, and the "
+            "generated scaffold all assume it."
+        ),
+    },
+    "resynchronisation": {
+        "title": "Approve re-synchronisation of work that is now out of date",
+        "what_changed": (
+            "Upstream work was revised after the artifacts below were derived "
+            "from it, so those artifacts no longer reflect the current version."
+        ),
+        "why": (
+            "Approving reruns the affected specialists against the revised "
+            "upstream. Declining leaves the work in place with its staleness "
+            "still visible, so nothing is silently rebuilt."
+        ),
+    },
     "code_generation": {
         "title": "Authorise code generation",
         "what_changed": (

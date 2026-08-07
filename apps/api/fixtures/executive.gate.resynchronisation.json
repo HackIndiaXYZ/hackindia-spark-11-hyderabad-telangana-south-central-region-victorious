@@ -1,0 +1,11 @@
+{
+  "value": {
+    "title": "Approve re-synchronisation of work that is now out of date",
+    "what_changed": "Upstream work was revised after the artifacts below were derived from it, so those artifacts no longer reflect the current version.",
+    "why": "Approving reruns the affected specialists against the revised upstream. Declining leaves the work in place with its staleness still visible, so nothing is silently rebuilt."
+  },
+  "usage": {
+    "input_tokens": 900,
+    "output_tokens": 220
+  }
+}

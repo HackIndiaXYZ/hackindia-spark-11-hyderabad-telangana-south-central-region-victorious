@@ -1,0 +1,31 @@
+{
+  "cycle": "traceability-convergence",
+  "generated_at": "2026-08-07T17:26:38.956883+00:00",
+  "specification": "An artifact must stop being reported as out of date once it has been rebuilt against the current version of its upstream.",
+  "measurements": {
+    "baseline_after_delivery": {
+      "total_edges": 205,
+      "current_declarations": 205,
+      "stale_all_edges": 0,
+      "stale_current_declaration": 0
+    },
+    "after_requirement_change": {
+      "total_edges": 205,
+      "current_declarations": 205,
+      "stale_all_edges": 19,
+      "stale_current_declaration": 19
+    },
+    "after_resynchronisation": {
+      "total_edges": 410,
+      "current_declarations": 205,
+      "stale_all_edges": 167,
+      "stale_current_declaration": 0
+    }
+  },
+  "result": {
+    "optimized_converges": true,
+    "defect_would_not_converge": true,
+    "stale_before_fix": 167,
+    "stale_after_fix": 0
+  }
+}
