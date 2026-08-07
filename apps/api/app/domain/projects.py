@@ -11,7 +11,11 @@ from app.domain.lifecycle import LifecycleStage, StageStatus
 
 
 class StageState(BaseModel):
-    """Progress of one lifecycle stage within a project."""
+    """Progress of one lifecycle stage within a project.
+
+    Mutable rather than frozen: a stage genuinely moves backwards when a reviewer
+    rejects its output, and the organization reruns it.
+    """
 
     stage: LifecycleStage
     status: StageStatus = StageStatus.PENDING

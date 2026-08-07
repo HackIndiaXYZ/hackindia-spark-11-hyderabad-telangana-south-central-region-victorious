@@ -181,6 +181,10 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         run.token_usage = response.usage
         run.provider = response.provider
         run.model = response.model
+        # Recorded on the run so the Executive AI can raise the gate on its next
+        # assessment. An agent's request for review must survive the return trip.
+        run.requires_approval = output.requires_approval
+        run.approval_reason = output.approval_reason
         run.completed_at = datetime.now(UTC)
         await self._memory.runs.update(run)
 
@@ -280,21 +284,39 @@ class BaseAgent[TOutput: AgentOutput](ABC):
         for draft in drafts:
             self._guard_against_orphan(draft, available)
 
-            artifact = await self._memory.artifacts.create(
-                Artifact(
-                    project_id=project_id,
-                    type=draft.type,
-                    title=draft.title,
-                    stage=self.stage,
-                    owner_role=self.role,
-                    status=ArtifactStatus.DRAFT,
-                )
+            # An agent that runs again — after a rejection, or because a
+            # requirement changed — revises what it produced before rather than
+            # creating a competing copy. The artifact keeps its identity, so
+            # every traceability edge pointing at it survives the revision, and
+            # the previous version stays readable (ADR-0007).
+            artifact = await self._memory.artifacts.find_by_identity(
+                project_id, draft.type, self.stage, draft.title
             )
+            revising = artifact is not None
+
+            if artifact is None:
+                artifact = await self._memory.artifacts.create(
+                    Artifact(
+                        project_id=project_id,
+                        type=draft.type,
+                        title=draft.title,
+                        stage=self.stage,
+                        owner_role=self.role,
+                        status=ArtifactStatus.DRAFT,
+                    )
+                )
+            elif artifact.status is not ArtifactStatus.DRAFT:
+                # Revised work has not been reviewed yet, whatever its previous
+                # status was. Leaving it approved would let a rejection be
+                # answered with content nobody signed off on.
+                artifact.status = ArtifactStatus.DRAFT
+                await self._memory.artifacts.update(artifact)
+
             await self._memory.artifacts.append_version(
                 artifact.id,
                 ArtifactVersion(
                     artifact_id=artifact.id,
-                    version=1,
+                    version=1,  # Assigned by the repository; ignored here.
                     body_markdown=draft.body_markdown,
                     content=dict(draft.content),
                     produced_by_run_id=run.id,
@@ -323,8 +345,8 @@ class BaseAgent[TOutput: AgentOutput](ABC):
 
             await self._publish(
                 project_id,
-                EventType.ARTIFACT_CREATED,
-                f"{self.title} produced {draft.title}",
+                EventType.ARTIFACT_REVISED if revising else EventType.ARTIFACT_CREATED,
+                f"{self.title} {'revised' if revising else 'produced'} {draft.title}",
                 {
                     "artifact_id": artifact.id,
                     "artifact_type": draft.type.value,

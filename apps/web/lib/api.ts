@@ -229,6 +229,23 @@ export const api = {
       live,
     ),
 
+  reviseArtifact: (
+    projectId: string,
+    artifactId: string,
+    bodyMarkdown: string,
+    summary?: string,
+  ) =>
+    apiRequest<ArtifactDetail>(
+      `${V1}/projects/${projectId}/artifacts/${artifactId}/revise`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          body_markdown: bodyMarkdown,
+          summary: summary ?? "",
+        }),
+      },
+    ),
+
   getOrganization: (id: string) =>
     apiRequest<AgentCard[]>(`${V1}/projects/${id}/agents`, live),
 

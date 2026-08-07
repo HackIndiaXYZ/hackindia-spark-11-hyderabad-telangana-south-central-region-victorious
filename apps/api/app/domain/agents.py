@@ -152,6 +152,20 @@ class AgentRun(BaseModel):
     model: str | None = Field(default=None)
     token_usage: TokenUsage = Field(default_factory=TokenUsage)
 
+    requires_approval: bool = Field(
+        default=False,
+        description=(
+            "Whether the agent judged its own output too consequential to proceed "
+            "on without a human. `09_MVP_Roadmap.md` requires approval of "
+            "technology selection and major engineering decisions, neither of "
+            "which is stage-shaped — they arise from what an agent concludes, so "
+            "the agent has to be able to raise the gate itself."
+        ),
+    )
+    approval_reason: str = Field(
+        default="", description="Why the agent asked for review."
+    )
+
     correlation_id: str | None = Field(
         default=None,
         description=(

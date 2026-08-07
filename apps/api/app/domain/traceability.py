@@ -145,25 +145,57 @@ class ImpactAnalysis(BaseModel):
         return not self.impacted
 
 
+def current_edges(edges: Iterable[TraceEdge]) -> list[TraceEdge]:
+    """Return only the most recent declaration of each dependency.
+
+    Edges are immutable, so an agent that reruns declares a *new* edge rather
+    than updating the old one — which means the graph accumulates a history of
+    derivations for the same pair. The earlier ones are exactly that: history.
+
+    Without this filter an artifact could never stop being stale. Rebuilding it
+    against the current upstream adds a fresh edge, but the superseded edge still
+    cites the old version, so the artifact would be reported out of date forever
+    no matter how many times it was regenerated.
+
+    Recency is judged by creation time, falling back to the cited upstream
+    version when two edges share a timestamp.
+    """
+    latest: dict[tuple[str, str, TraceKind], TraceEdge] = {}
+
+    for edge in edges:
+        key = (edge.upstream_artifact_id, edge.downstream_artifact_id, edge.kind)
+        existing = latest.get(key)
+        if existing is None or (edge.created_at, edge.upstream_version) >= (
+            existing.created_at,
+            existing.upstream_version,
+        ):
+            latest[key] = edge
+
+    return list(latest.values())
+
+
 def stale_edges(
     edges: Iterable[TraceEdge],
     current_versions: Mapping[str, int],
 ) -> list[StaleEdge]:
-    """Return edges whose upstream artifact has advanced past the cited version.
+    """Return derivations whose upstream has advanced past the cited version.
+
+    Only the current declaration of each dependency is considered; superseded
+    edges are history (see :func:`current_edges`).
 
     Args:
         edges: Edges to examine.
         current_versions: Artifact ID to its current version number.
 
     Returns:
-        One entry per out-of-date edge. An edge whose upstream is missing from
-        ``current_versions`` is skipped rather than assumed stale — an unknown
-        artifact is a caller bug, and guessing would produce false alarms in the
-        one place the platform must be trustworthy.
+        One entry per out-of-date dependency. An edge whose upstream is missing
+        from ``current_versions`` is skipped rather than assumed stale — an
+        unknown artifact is a caller bug, and guessing would produce false alarms
+        in the one place the platform must be trustworthy.
     """
     results: list[StaleEdge] = []
 
-    for edge in edges:
+    for edge in current_edges(edges):
         current = current_versions.get(edge.upstream_artifact_id)
         if current is None:
             continue

@@ -32,6 +32,7 @@ from app.llm.provider import CompletionRequest, CompletionResponse, StructuredRe
 from app.memory.context_builder import ContextBuilder, ProjectContext
 from app.memory.sql_repository import SqlSharedMemory
 from app.orchestration.conflicts import ConflictKind
+from app.orchestration.executive import CoordinationAction
 from app.orchestration.runner import OrchestrationRunner
 
 ARTIFACT_ID_PATTERN = re.compile(r"art_[0-9a-f]{32}")
@@ -339,10 +340,16 @@ async def test_no_second_gate_is_raised_while_one_is_pending(
 # --- Conflict detection -------------------------------------------------------
 
 
-async def test_stale_derivation_halts_the_workflow(
+async def test_stale_derivation_stops_work_and_proposes_resynchronisation(
     memory: SqlSharedMemory, project: Project
 ) -> None:
-    """A conflicting state is detected rather than silently built upon."""
+    """A conflicting state is detected rather than silently built upon.
+
+    Stale work is recoverable — the specialists that built on the old version can
+    rebuild against the new one — so the Executive proposes re-synchronisation
+    rather than declaring a dead end. Regenerating approved work is still the
+    user's decision, so it stops at a gate.
+    """
     runner = build_runner(memory)
     await runner.advance(project.id)
     await approve_latest(memory, project.id)
@@ -359,19 +366,34 @@ async def test_stale_derivation_halts_the_workflow(
 
     outcome = await runner.advance(project.id)
 
-    assert outcome.is_blocked
-    assert not outcome.made_progress
+    assert not outcome.made_progress, "no work may proceed on a stale derivation"
+    assert outcome.awaiting_approval
+
     kinds = {conflict["kind"] for conflict in outcome.conflicts}
     assert ConflictKind.STALE_DERIVATION.value in kinds
+
+    # Once no other gate is outstanding, the Executive proposes rebuilding the
+    # stale work rather than declaring a dead end.
+    await approve_latest(memory, project.id)
+    decision = await runner.executive.assess(project.id)
+
+    assert decision.action is CoordinationAction.REQUEST_APPROVAL
+    assert decision.gate is ApprovalKind.RESYNCHRONISATION
 
 
 async def test_duplicate_approved_artifacts_halt_the_workflow(
     memory: SqlSharedMemory, project: Project
 ) -> None:
+    """Two approved artifacts of one type is a dead end no rerun resolves."""
     runner = build_runner(memory)
     await runner.advance(project.id)
+    # Clear the pending gate so readiness is not what stops the next pass —
+    # the conflict must be what does.
+    await approve_latest(memory, project.id)
 
     prds = await memory.artifacts.list_for_project(project.id, artifact_type=ArtifactType.PRD)
+    # `approve_latest` decides the request; the artifacts are marked approved by
+    # the Executive, which this test bypasses to isolate the conflict rule.
     for prd in prds:
         prd.status = ArtifactStatus.APPROVED
         await memory.artifacts.update(prd)
@@ -384,11 +406,13 @@ async def test_duplicate_approved_artifacts_halt_the_workflow(
         ArtifactVersion(artifact_id=duplicate.id, version=1, body_markdown="# Competing PRD"),
     )
 
-    outcome = await runner.advance(project.id)
+    # With no gate outstanding, a conflict no rerun can resolve must stop work.
+    await approve_latest(memory, project.id)
+    decision = await runner.executive.assess(project.id)
 
-    assert outcome.is_blocked
-    kinds = {conflict["kind"] for conflict in outcome.conflicts}
-    assert ConflictKind.DUPLICATE_AUTHORITY.value in kinds
+    assert decision.action is CoordinationAction.HALT_BLOCKED
+    kinds = {conflict.kind for conflict in decision.conflicts}
+    assert ConflictKind.DUPLICATE_AUTHORITY in kinds
 
 
 # --- Traceability through orchestration ---------------------------------------

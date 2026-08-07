@@ -315,6 +315,28 @@ class ApprovalView(BaseModel):
         )
 
 
+class ReviseArtifactRequest(BaseModel):
+    """A human's revision of an engineering artifact.
+
+    Appends a version; it never edits one. The version downstream agents consumed
+    must stay readable, and the new version is what makes their work stale.
+    """
+
+    body_markdown: str = Field(min_length=1)
+    summary: str = Field(
+        default="",
+        max_length=300,
+        description="What changed, shown in version history and the impact preview.",
+    )
+    content: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Structured content, if the caller has it. Omitted for a prose edit, "
+            "in which case the markdown is the truth for this version."
+        ),
+    )
+
+
 class ApprovalDecisionRequest(BaseModel):
     """A human's decision on an approval gate."""
 

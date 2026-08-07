@@ -134,6 +134,8 @@ def _to_run(row: AgentRunRow) -> AgentRun:
         token_usage=TokenUsage(
             input_tokens=row.input_tokens, output_tokens=row.output_tokens
         ),
+        requires_approval=row.requires_approval,
+        approval_reason=row.approval_reason,
         correlation_id=row.correlation_id,
         error=row.error,
         started_at=row.started_at,
@@ -289,6 +291,21 @@ class SqlArtifactRepository(_Base):
 
             result = await session.execute(query.order_by(ArtifactRow.created_at))
             return [_to_artifact(row) for row in result.scalars()]
+
+    async def find_by_identity(
+        self, project_id: str, artifact_type: ArtifactType, stage: LifecycleStage, title: str
+    ) -> Artifact | None:
+        async with self._db.session() as session:
+            result = await session.execute(
+                select(ArtifactRow).where(
+                    ArtifactRow.project_id == project_id,
+                    ArtifactRow.type == artifact_type.value,
+                    ArtifactRow.stage == stage.value,
+                    ArtifactRow.title == title,
+                )
+            )
+            row = result.scalars().first()
+            return _to_artifact(row) if row else None
 
     async def append_version(
         self, artifact_id: str, version: ArtifactVersion
@@ -504,6 +521,8 @@ class SqlAgentRunRepository(_Base):
             row.model = run.model
             row.input_tokens = run.token_usage.input_tokens
             row.output_tokens = run.token_usage.output_tokens
+            row.requires_approval = run.requires_approval
+            row.approval_reason = run.approval_reason
             row.error = run.error
             row.completed_at = run.completed_at
 
@@ -554,6 +573,8 @@ class SqlAgentRunRepository(_Base):
             model=run.model,
             input_tokens=run.token_usage.input_tokens,
             output_tokens=run.token_usage.output_tokens,
+            requires_approval=run.requires_approval,
+            approval_reason=run.approval_reason,
             correlation_id=run.correlation_id,
             error=run.error,
             started_at=run.started_at,

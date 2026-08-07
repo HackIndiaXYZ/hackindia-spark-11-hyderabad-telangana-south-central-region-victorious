@@ -6,7 +6,6 @@ reading its artifacts, agents, approvals, timeline, and traceability graph.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Query, status
@@ -24,11 +23,12 @@ from app.api.schemas import (
     EventView,
     ProjectDetail,
     ProjectSummary,
+    ReviseArtifactRequest,
     TraceGraph,
 )
 from app.core.logging import get_logger
 from app.domain.approvals import ApprovalStatus
-from app.domain.artifacts import ArtifactStatus, ArtifactType
+from app.domain.artifacts import ArtifactType, ArtifactVersion
 from app.domain.errors import ValidationError
 from app.domain.events import EventType, ProjectEvent
 from app.domain.lifecycle import LifecycleStage
@@ -191,6 +191,83 @@ async def get_artifact(
     return await views.artifact_detail(memory, artifact_id, version=version)
 
 
+@router.post(
+    "/{project_id}/artifacts/{artifact_id}/revise",
+    response_model=ArtifactDetail,
+    summary="Revise an artifact",
+)
+async def revise_artifact(
+    project_id: str,
+    artifact_id: str,
+    memory: MemoryDep,
+    revision: Annotated[ReviseArtifactRequest, Body()],
+) -> ArtifactDetail:
+    """Append a human-authored revision to an artifact.
+
+    The change a user makes when a requirement turns out to be wrong. It appends
+    a version rather than editing in place, so the version the agents downstream
+    consumed stays readable, and every traceability edge pointing at this
+    artifact now cites an older version than it currently has — which is exactly
+    how those downstream artifacts become stale (ADR-0007).
+
+    Nothing is regenerated here. The impact is computed and returned so the user
+    can see the blast radius before deciding what to do about it.
+    """
+    artifact = await memory.artifacts.get(artifact_id)
+
+    if artifact.project_id != project_id:
+        raise ValidationError(
+            "Artifact does not belong to this project",
+            details={"artifact_id": artifact_id, "project_id": project_id},
+        )
+
+    await memory.artifacts.append_version(
+        artifact_id,
+        ArtifactVersion(
+            artifact_id=artifact_id,
+            version=1,  # Assigned by the repository.
+            body_markdown=revision.body_markdown,
+            content=artifact_content_or_empty(revision),
+            summary=revision.summary or "Revised by a human",
+        ),
+    )
+
+    impact = await memory.traces.analyse_impact(project_id, artifact_id)
+
+    await memory.events.append(
+        ProjectEvent(
+            project_id=project_id,
+            type=EventType.ARTIFACT_REVISED,
+            stage=artifact.stage,
+            summary=f"{artifact.title} was revised — {len(impact.impacted)} artifacts affected",
+            payload={
+                "artifact_id": artifact_id,
+                "impacted_artifact_ids": impact.artifact_ids,
+            },
+        )
+    )
+
+    logger.info(
+        "Artifact revised",
+        extra={
+            "project_id": project_id,
+            "artifact_id": artifact_id,
+            "impacted": len(impact.impacted),
+        },
+    )
+    return await views.artifact_detail(memory, artifact_id)
+
+
+def artifact_content_or_empty(revision: ReviseArtifactRequest) -> dict[str, object]:
+    """Structured content for a human revision.
+
+    A person edits prose, not the structured fields an agent emits. Carrying the
+    previous structure forward would leave it describing text that no longer
+    exists, so it is dropped and the markdown becomes the truth for this version.
+    """
+    return dict(revision.content or {})
+
+
 approvals_router = APIRouter(prefix="/approvals", tags=["approvals"])
 
 
@@ -202,6 +279,7 @@ approvals_router = APIRouter(prefix="/approvals", tags=["approvals"])
 async def decide_approval(
     approval_id: str,
     memory: MemoryDep,
+    runner: RunnerDep,
     decision: Annotated[ApprovalDecisionRequest, Body()],
 ) -> ApprovalView:
     """Approve, reject, or request changes.
@@ -209,6 +287,10 @@ async def decide_approval(
     Rejecting requires feedback: it is fed back into the agent's context on
     re-run, so a rejection teaches rather than repeats. Rejecting without saying
     why would leave the organization to guess.
+
+    The consequences of a decision — approving the reviewed artifacts, or
+    reopening the stage that produced them — belong to the Executive AI, which
+    coordinates the organization. This endpoint only validates and delegates.
     """
     if decision.decision is ApprovalStatus.PENDING:
         raise ValidationError(
@@ -222,38 +304,8 @@ async def decide_approval(
             details={"decision": decision.decision.value},
         )
 
-    request = await memory.approvals.get(approval_id)
-    request.status = decision.decision
-    request.feedback = decision.feedback
-    request.decided_at = datetime.now(UTC)
-    await memory.approvals.update(request)
-
-    # Approving a gate approves the artifacts it was protecting: the reviewer has
-    # signed off on exactly those, and leaving them in draft would make the
-    # approval invisible everywhere else in the workspace.
-    if decision.decision.unblocks_progress:
-        for artifact_id in request.artifact_ids:
-            artifact = await memory.artifacts.get(artifact_id)
-            artifact.status = ArtifactStatus.APPROVED
-            await memory.artifacts.update(artifact)
-
-    await memory.events.append(
-        ProjectEvent(
-            project_id=request.project_id,
-            type=(
-                EventType.APPROVAL_GRANTED
-                if decision.decision.unblocks_progress
-                else EventType.APPROVAL_REJECTED
-            ),
-            stage=request.stage,
-            summary=f"{decision.decision.value.replace('_', ' ').title()}: {request.title}",
-            payload={"approval_id": request.id, "kind": request.kind.value},
-        )
-    )
-
-    logger.info(
-        "Approval decided",
-        extra={"approval_id": approval_id, "decision": decision.decision.value},
+    request = await runner.executive.record_decision(
+        approval_id, decision.decision, decision.feedback
     )
 
     views_list = await views.list_approvals(memory, request.project_id)

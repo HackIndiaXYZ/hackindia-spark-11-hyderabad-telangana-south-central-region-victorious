@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, ChevronLeft } from "lucide-react";
 
 import { ArtifactBody } from "@/components/artifact-body";
+import { ReviseArtifact } from "@/components/revise-artifact";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { api, badgeState, stageLabel, typeLabel } from "@/lib/api";
@@ -93,11 +94,21 @@ export default async function ArtifactPage({
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-        <Card>
-          <CardContent className="pt-5">
-            <ArtifactBody markdown={artifact.body_markdown} />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="pt-5">
+              <ArtifactBody markdown={artifact.body_markdown} />
+            </CardContent>
+          </Card>
+
+          {artifact.is_latest && (
+            <ReviseArtifact
+              projectId={id}
+              artifactId={artifactId}
+              currentMarkdown={artifact.body_markdown}
+            />
+          )}
+        </div>
 
         <aside className="space-y-4">
           <Card>

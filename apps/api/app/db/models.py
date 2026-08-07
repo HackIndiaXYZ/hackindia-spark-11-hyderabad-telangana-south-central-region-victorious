@@ -16,6 +16,7 @@ from typing import Any, ClassVar
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     DateTime,
     Float,
     ForeignKey,
@@ -174,6 +175,9 @@ class AgentRunRow(Base):
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+
+    requires_approval: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    approval_reason: Mapped[str] = mapped_column(Text, default="")
 
     correlation_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)

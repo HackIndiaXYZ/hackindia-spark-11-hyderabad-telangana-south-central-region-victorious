@@ -13,6 +13,7 @@ one place the platform must be exactly right.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import StrEnum
 
 from app.domain.approvals import ApprovalKind, ApprovalRequest, ApprovalStatus
@@ -168,12 +169,39 @@ def evaluate_readiness(stage: LifecycleStage, snapshot: ProjectSnapshot) -> Read
     if approval.status.unblocks_progress:
         return Readiness(stage=stage, status=ReadinessStatus.READY, gate=gate)
 
+    # A rejection applies to the work as it stood when the reviewer saw it. Once
+    # the responsible agent has revised that work, the old decision is about a
+    # version that no longer exists, so a fresh gate is raised rather than the
+    # project being blocked forever by an answered objection.
+    if _revised_since(stage, snapshot, approval.decided_at):
+        return Readiness(
+            stage=stage,
+            status=ReadinessStatus.APPROVAL_REQUIRED,
+            gate=gate,
+            detail=f"{gate.value} was revised and needs a fresh decision",
+        )
+
     return Readiness(
         stage=stage,
         status=ReadinessStatus.BLOCKED_BY_REJECTION,
         gate=gate,
         approval_id=approval.id,
         detail=approval.feedback or f"{gate.value} was not approved",
+    )
+
+
+def _revised_since(
+    stage: LifecycleStage, snapshot: ProjectSnapshot, decided_at: datetime | None
+) -> bool:
+    """Whether the artifacts a stage's gate covers changed after a decision."""
+    if decided_at is None:
+        return False
+
+    required = STAGE_INPUTS.get(stage, frozenset())
+    return any(
+        artifact.updated_at > decided_at
+        for artifact in snapshot.artifacts
+        if artifact.type in required and artifact.has_content
     )
 
 

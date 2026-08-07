@@ -78,6 +78,23 @@ class ArtifactRepository(Protocol):
         artifact_type: ArtifactType | None = None,
     ) -> list[Artifact]: ...
 
+    async def find_by_identity(
+        self, project_id: str, artifact_type: ArtifactType, stage: LifecycleStage, title: str
+    ) -> Artifact | None:
+        """Find an artifact an agent has produced before.
+
+        Identity is (project, type, stage, title). Title is part of the key
+        because a stage can legitimately produce several artifacts of one type —
+        the Full Stack Engineer writes many source files — while still producing
+        exactly one of each *named* artifact.
+
+        Used when an agent re-runs after a rejection: the revised work becomes a
+        new *version* of what it produced before rather than a second competing
+        artifact, which is what keeps the traceability graph pointing at one
+        stable identity across revisions (ADR-0007).
+        """
+        ...
+
     async def append_version(
         self, artifact_id: str, version: ArtifactVersion
     ) -> ArtifactVersion:

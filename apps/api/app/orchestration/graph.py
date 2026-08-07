@@ -203,7 +203,15 @@ def build_workflow(executive: ExecutiveAI, dispatcher: AgentDispatcher):  # type
 
         stage = LifecycleStage(raw_stage)
         request = await executive.raise_gate(project_id, stage, ApprovalKind(raw_gate))
-        await executive.mark_stage(project_id, stage, StageStatus.AWAITING_APPROVAL)
+
+        # Only a stage that has not run yet is "awaiting approval". A gate an
+        # agent raised about work it just finished must not un-complete that
+        # stage, or the specialist would be dispatched again once the gate
+        # cleared — doing the same work twice.
+        project = await executive.project_state(project_id)
+        stage_state = project.stage_state(stage)
+        if stage_state is None or stage_state.status is not StageStatus.COMPLETED:
+            await executive.mark_stage(project_id, stage, StageStatus.AWAITING_APPROVAL)
 
         return {
             **state,
